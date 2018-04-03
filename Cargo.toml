@@ -7,4 +7,3 @@ authors = ["Joeri Samson <joerisamson@gmail.com>"]
 diesel = { version = "1.1.1", features = ["postgres"] }
 diesel_infer_schema = { version = "1.1.0", features = ["postgres"] }
 dotenv = "0.9.0"
-iron = "0.6.0"
