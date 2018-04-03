@@ -25,8 +25,8 @@ pub fn create_user<'a>(conn: &PgConnection, email: &'a str, slack_handle: Option
     use schema::users;
 
     let new_user = NewUser {
-        email: email,
-        slack_handle: slack_handle,
+        email,
+        slack_handle,
     };
 
     diesel::insert_into(users::table)
