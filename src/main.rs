@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate diesel;
 #[macro_use]
-extern crate diesel_infer_schema;
+extern crate diesel_derive_enum;
 
 pub mod schema;
 pub mod models;
@@ -26,6 +26,7 @@ pub fn create_user<'a>(conn: &PgConnection, email: &'a str, slack_handle: Option
 
     let new_user = NewUser {
         email,
+        encrypted_password: "",
         slack_handle,
     };
 
