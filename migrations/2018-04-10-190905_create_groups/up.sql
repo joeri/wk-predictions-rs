@@ -1,0 +1,5 @@
+CREATE TABLE groups (
+  group_id SERIAL PRIMARY KEY,
+  name VARCHAR NOT NULL
+);
+

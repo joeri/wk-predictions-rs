@@ -1,7 +1,8 @@
 -- Your SQL goes here
 CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
+  user_id SERIAL PRIMARY KEY,
   email VARCHAR NOT NULL,
+  encrypted_password VARCHAR NOT NULL,
   slack_handle VARCHAR
 );
 
