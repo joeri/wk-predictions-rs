@@ -1,11 +1,9 @@
-#[macro_use]
 extern crate diesel;
-#[macro_use]
-extern crate diesel_derive_enum;
-
-pub mod schema;
-pub mod models;
 extern crate dotenv;
+
+extern crate wk_predictions;
+use wk_predictions::schema;
+use wk_predictions::models;
 
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
