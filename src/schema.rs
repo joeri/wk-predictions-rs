@@ -1,6 +1,6 @@
 #[derive(Debug, DbEnum)]
 pub enum StageType {
-    Group,  // All variants must be fieldless
+    Group,
     Knockout,
 }
 
