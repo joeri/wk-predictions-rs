@@ -19,19 +19,19 @@ pub fn establish_connection() -> PgConnection {
 
 use self::models::{NewUser, User};
 
-pub fn create_user<'a>(conn: &PgConnection, email: &'a str, slack_handle: Option<&'a str>) -> User {
+pub fn create_user<'a>(conn: &PgConnection, email: &'a str, password: &'a str, slack_handle: Option<&'a str>) -> User {
     use schema::users;
 
     let new_user = NewUser {
         email,
-        encrypted_password: "",
+        password: password,
         slack_handle,
     };
 
     diesel::insert_into(users::table)
-        .values(&new_user)
+        .values(new_user)
         .get_result(conn)
-        .expect("Error saving new post")
+        .expect("Error saving new user")
 }
 
 fn main() {
@@ -58,11 +58,20 @@ fn main() {
     println!("What would you like your email to be?");
     let mut new_email = String::new();
     stdin().read_line(&mut new_email).unwrap();
-    let new_email = &new_email[..(new_email.len() - 1)]; // Drop the newline character
+    let new_email_str = &new_email[..(new_email.len() - 1)]; // Drop the newline character
+    println!("\npassword: ");
+    let mut password = String::new();
+    stdin().read_line(&mut password).unwrap();
+    let password_str = &password[..(password.len() - 1)]; // Drop the newline character
     println!("\nWhat is your slack handle?\n");
-    let mut new_slack_handle = String::new();
-    stdin().read_line(&mut new_slack_handle).unwrap();
+    let mut slack_handle_buf = String::new();
+    stdin().read_line(&mut slack_handle_buf).unwrap();
+    let new_slack_handle: Option<&str> = if slack_handle_buf == "\n" {
+        None
+    } else {
+        Some(&slack_handle_buf)
+    };
 
-    let user = create_user(&connection, new_email, Some(&new_slack_handle));
+    let user = create_user(&connection, new_email_str, password_str, new_slack_handle);
     println!("\nSaved user {} with id {}", user.email, user.id);
 }

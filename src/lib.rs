@@ -9,6 +9,8 @@ extern crate futures;
 #[macro_use]
 extern crate serde_derive;
 
+extern crate bcrypt;
+
 pub mod web;
 pub mod schema;
 pub mod models;
