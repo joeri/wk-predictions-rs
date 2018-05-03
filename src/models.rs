@@ -2,7 +2,7 @@ use super::schema::users;
 use bcrypt::{hash, DEFAULT_COST};
 use diesel;
 
-#[derive(Queryable, Identifiable)]
+#[derive(Queryable, Identifiable, Debug)]
 pub struct User {
     pub id: i32,
     pub email: String,

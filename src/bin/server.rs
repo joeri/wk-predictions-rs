@@ -74,11 +74,11 @@ fn main() {
         App::with_state(AppState { db: addr.clone() })
             .resource("/login", |r| {
                 r.name("login");
-                r.get().with(auth::login);
+                r.get().f(|_req| auth::login());
                 r.post().with2(auth::perform_login).0.limit(4096);
             })
             .resource("/register", |r| {
-                r.get().with(auth::register);
+                r.get().f(|_req| auth::register());
                 r.post().with2(auth::perform_registration).0.limit(4096);
             })
             .resource("/{name}/{id}/index.html", |r| r.get().with2(index))
