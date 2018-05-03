@@ -3,6 +3,7 @@ extern crate actix_web;
 extern crate diesel;
 extern crate dotenv;
 extern crate futures;
+extern crate env_logger;
 
 extern crate wk_predictions;
 use wk_predictions::{schema, web::{auth, app_state, app_state::{ AppState, DbExecutor }}};
@@ -12,7 +13,7 @@ use dotenv::dotenv;
 use std::env;
 
 use actix_web::{server, App, AsyncResponder, Error, FutureResponse, HttpResponse,
-                Path, State};
+                Path, State, middleware::Logger};
 use actix::prelude::*;
 
 use futures::future::Future;
@@ -57,6 +58,8 @@ fn index(info: Path<(String, u32)>, state: State<AppState>) -> FutureResponse<Ht
 
 fn main() {
     dotenv().ok();
+
+    env_logger::init();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     let bind_url = env::var("BIND_URL").unwrap_or_else(|_| "127.0.0.1".to_owned());
@@ -72,6 +75,7 @@ fn main() {
 
     server::new(move || {
         App::with_state(AppState { db: addr.clone() })
+            .middleware(Logger::default())
             .resource("/login", |r| {
                 r.name("login");
                 r.get().f(|_req| auth::login());
