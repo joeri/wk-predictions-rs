@@ -24,7 +24,7 @@ pub fn create_user<'a>(conn: &PgConnection, email: &'a str, password: &'a str, s
 
     let new_user = NewUser {
         email,
-        password: password,
+        password,
         slack_handle,
     };
 

@@ -59,8 +59,8 @@ fn main() {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
-    let bind_url = env::var("BIND_URL").unwrap_or("127.0.0.1".to_owned());
-    let bind_port = env::var("BIND_PORT").unwrap_or("8080".to_owned());
+    let bind_url = env::var("BIND_URL").unwrap_or_else(|_| "127.0.0.1".to_owned());
+    let bind_port = env::var("BIND_PORT").unwrap_or_else(|_| "8080".to_owned());
     let url = format!("{}:{}", bind_url, bind_port);
 
     let sys = actix::System::new("diesel-example");
