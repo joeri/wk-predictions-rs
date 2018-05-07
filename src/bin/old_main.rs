@@ -19,7 +19,12 @@ pub fn establish_connection() -> PgConnection {
 
 use self::models::{NewUser, User};
 
-pub fn create_user<'a>(conn: &PgConnection, email: &'a str, password: &'a str, slack_handle: Option<&'a str>) -> User {
+pub fn create_user<'a>(
+    conn: &PgConnection,
+    email: &'a str,
+    password: &'a str,
+    slack_handle: Option<&'a str>,
+) -> User {
     use schema::users;
 
     let new_user = NewUser {

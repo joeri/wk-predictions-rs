@@ -1,13 +1,15 @@
 use std::path::PathBuf;
 use actix_web;
-use actix_web::{Form, FutureResponse, HttpResponse, State, AsyncResponder, fs::NamedFile};
+use actix_web::{AsyncResponder, Form, FutureResponse, HttpRequest, HttpResponse, State,
+                fs::NamedFile};
+use actix_web::middleware::identity::RequestIdentity;
 use actix::prelude::*;
 use futures::Future;
 use diesel;
 use diesel::prelude::*;
 use bcrypt::verify;
-use ::web::app_state::{AppState, DbExecutor};
-use ::models::{User, NewUser};
+use web::app_state::{AppState, DbExecutor};
+use models::{NewUser, User};
 extern crate failure;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -24,7 +26,7 @@ pub struct RegistrationForm {
 }
 
 pub fn login() -> actix_web::Result<NamedFile> {
-    let path : PathBuf = PathBuf::from("login.html");
+    let path: PathBuf = PathBuf::from("login.html");
     Ok(NamedFile::open(path)?)
 }
 
@@ -45,7 +47,7 @@ impl Handler<LoginForm> for DbExecutor {
 
         let result = match user {
             Some(u) => verify(&form.password, &u.encrypted_password)?,
-            None    => false,
+            None => false,
         };
 
         // TODO: set cookie (perhaps in perform_login method itself)
@@ -56,17 +58,22 @@ impl Handler<LoginForm> for DbExecutor {
     }
 }
 
-pub fn perform_login(form: Form<LoginForm>, state: State<AppState>) -> FutureResponse<HttpResponse> {
+pub fn perform_login(
+    form: Form<LoginForm>,
+    state: State<AppState>,
+    mut req: HttpRequest<AppState>,
+) -> FutureResponse<HttpResponse> {
     let inner_form = form.into_inner();
     state
         .db
         .send(inner_form.clone())
         .from_err()
         .and_then(move |res| match res {
-            Ok(true) => /* should be redirect to /login really */ Ok(HttpResponse::Ok().content_type("text/plain; charset=utf-8").body(format!(
-                "Successful login by {:?}",
-                inner_form.username,
-            ))),
+            Ok(true) => {
+                req.remember(inner_form.username.clone());
+                // TODO: check whether user was redirected to login, and redirect there instead
+                Ok(HttpResponse::SeeOther().header("Location", "/").finish())
+            },
             Ok(false) => /* should be redirect to /login really */ Ok(HttpResponse::Unauthorized().content_type("text/plain; charset=utf-8").body(format!(
                 "Failed to login by {:?}",
                 inner_form.username,
@@ -77,7 +84,7 @@ pub fn perform_login(form: Form<LoginForm>, state: State<AppState>) -> FutureRes
 }
 
 pub fn register() -> actix_web::Result<NamedFile> {
-    let path : PathBuf = PathBuf::from("register.html");
+    let path: PathBuf = PathBuf::from("register.html");
     Ok(NamedFile::open(path)?)
 }
 

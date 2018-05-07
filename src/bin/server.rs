@@ -2,18 +2,20 @@ extern crate actix;
 extern crate actix_web;
 extern crate diesel;
 extern crate dotenv;
-extern crate futures;
 extern crate env_logger;
+extern crate futures;
 
 extern crate wk_predictions;
-use wk_predictions::{schema, web::{auth, app_state, app_state::{ AppState, DbExecutor }}};
+use wk_predictions::{schema, web::{app_state, auth, app_state::{AppState, DbExecutor}}};
 
 use diesel::prelude::*;
 use dotenv::dotenv;
 use std::env;
 
-use actix_web::{server, App, AsyncResponder, Error, FutureResponse, HttpResponse,
-                Path, State, middleware::Logger};
+use actix_web::{server, App, AsyncResponder, Error, FutureResponse, HttpRequest, HttpResponse,
+                State,
+                middleware::{Logger,
+                             identity::{CookieIdentityPolicy, IdentityService, RequestIdentity}}};
 use actix::prelude::*;
 
 use futures::future::Future;
@@ -40,17 +42,22 @@ impl Handler<CountUsers> for DbExecutor {
     }
 }
 
-
-fn index(info: Path<(String, u32)>, state: State<AppState>) -> FutureResponse<HttpResponse> {
+fn index(request: HttpRequest<AppState>, state: State<AppState>) -> FutureResponse<HttpResponse> {
     state
         .db
         .send(CountUsers {})
         .from_err()
         .and_then(move |res| match res {
-            Ok(count) => Ok(HttpResponse::Ok().body(format!(
-                "There are {} user(s), data = {}, {}",
-                count, info.0, info.1
-            ))),
+            Ok(count) => match request.identity() {
+                Some(id) => Ok(HttpResponse::Ok().body(format!(
+                    "There are {} users, and you are one of them ({} to be precise)",
+                    count, id
+                ))),
+                None => Ok(HttpResponse::Ok().body(format!(
+                    "There are {} users, but you're not one of them",
+                    count
+                ))),
+            },
             Err(_) => Ok(HttpResponse::InternalServerError().into()),
         })
         .responder()
@@ -61,6 +68,10 @@ fn main() {
 
     env_logger::init();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    env::remove_var("DATABASE_URL"); // Likely contains username/password
+    let cookie_secret = env::var("COOKIE_SECRET")
+        .expect("COOKIE_SECRET must be set (and be at least 32 bytes long)");
+    env::remove_var("COOKIE_SECRET");
 
     let bind_url = env::var("BIND_URL").unwrap_or_else(|_| "127.0.0.1".to_owned());
     let bind_port = env::var("BIND_PORT").unwrap_or_else(|_| "8080".to_owned());
@@ -69,23 +80,27 @@ fn main() {
     let sys = actix::System::new("diesel-example");
 
     // Start 3 parallel db executors
-    let addr = SyncArbiter::start(3, move || {
-        app_state::establish_connection(&database_url)
-    });
+    let addr = SyncArbiter::start(3, move || app_state::establish_connection(&database_url));
 
     server::new(move || {
         App::with_state(AppState { db: addr.clone() })
             .middleware(Logger::default())
+            .middleware(IdentityService::new(
+                CookieIdentityPolicy::new(&cookie_secret.clone().into_bytes())
+                    .name("auth-cookie")
+                    .secure(false),
+            ))
             .resource("/login", |r| {
                 r.name("login");
                 r.get().f(|_req| auth::login());
-                r.post().with2(auth::perform_login).0.limit(4096);
+                r.post().with3(auth::perform_login).0.limit(4096);
             })
             .resource("/register", |r| {
                 r.get().f(|_req| auth::register());
                 r.post().with2(auth::perform_registration).0.limit(4096);
             })
-            .resource("/{name}/{id}/index.html", |r| r.get().with2(index))
+            .resource("/", |r| r.get().with2(index))
+            .resource("/index.html", |r| r.get().with2(index))
     }).bind(&url)
         .unwrap()
         .start();

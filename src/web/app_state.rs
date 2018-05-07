@@ -16,5 +16,7 @@ pub struct AppState {
 }
 
 pub fn establish_connection(database_url: &str) -> DbExecutor {
-    DbExecutor { connection: PgConnection::establish(&database_url).unwrap() }
+    DbExecutor {
+        connection: PgConnection::establish(&database_url).unwrap(),
+    }
 }

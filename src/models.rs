@@ -25,13 +25,14 @@ pub struct NewUserWithEncryptedPassword<'a> {
 }
 
 impl<'a> diesel::prelude::Insertable<users::table> for NewUser<'a> {
-    type Values = <NewUserWithEncryptedPassword<'a> as diesel::prelude::Insertable<users::table>>::Values;
+    type Values =
+        <NewUserWithEncryptedPassword<'a> as diesel::prelude::Insertable<users::table>>::Values;
 
     fn values(self) -> Self::Values {
         let plain_text_pw = self.password;
         let hashed_password = match hash(plain_text_pw, DEFAULT_COST) {
             Ok(hashed) => hashed,
-            Err(_) => panic!("Error hashing")
+            Err(_) => panic!("Error hashing"),
         };
 
         let encrypted_self = NewUserWithEncryptedPassword {
@@ -43,7 +44,3 @@ impl<'a> diesel::prelude::Insertable<users::table> for NewUser<'a> {
         encrypted_self.values()
     }
 }
-
-
-
-
