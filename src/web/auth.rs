@@ -1,7 +1,4 @@
-use std::path::PathBuf;
-use actix_web;
-use actix_web::{AsyncResponder, Form, FutureResponse, HttpRequest, HttpResponse, State,
-                fs::NamedFile};
+use actix_web::{AsyncResponder, Form, FutureResponse, HttpRequest, HttpResponse, State};
 use actix_web::middleware::identity::RequestIdentity;
 use actix::prelude::*;
 use futures::Future;
@@ -10,6 +7,7 @@ use diesel::prelude::*;
 use bcrypt::verify;
 use web::app_state::{AppState, DbExecutor};
 use models::{NewUser, User};
+use templates::{Context, TEMPLATE_SERVICE};
 extern crate failure;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -25,9 +23,17 @@ pub struct RegistrationForm {
     password: String,
 }
 
-pub fn login() -> actix_web::Result<NamedFile> {
-    let path: PathBuf = PathBuf::from("login.html");
-    Ok(NamedFile::open(path)?)
+pub fn login() -> HttpResponse {
+    let rendered = TEMPLATE_SERVICE.render("login.html", &Context::new());
+    match rendered {
+        Ok(body) => HttpResponse::Ok().content_type("text/html").body(body),
+        Err(error) => {
+            println!("{}", error);
+            HttpResponse::InternalServerError()
+                .content_type("text/html")
+                .body("Something went wrong")
+        }
+    }
 }
 
 impl Message for LoginForm {
@@ -83,9 +89,17 @@ pub fn perform_login(
         .responder()
 }
 
-pub fn register() -> actix_web::Result<NamedFile> {
-    let path: PathBuf = PathBuf::from("register.html");
-    Ok(NamedFile::open(path)?)
+pub fn register() -> HttpResponse {
+    let rendered = TEMPLATE_SERVICE.render("register.html", &Context::new());
+    match rendered {
+        Ok(body) => HttpResponse::Ok().content_type("text/html").body(body),
+        Err(error) => {
+            println!("{}", error);
+            HttpResponse::InternalServerError()
+                .content_type("text/html")
+                .body("Something went wrong")
+        }
+    }
 }
 
 impl Message for RegistrationForm {

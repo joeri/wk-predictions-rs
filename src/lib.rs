@@ -11,6 +11,12 @@ extern crate serde_derive;
 
 extern crate bcrypt;
 
+#[macro_use]
+extern crate lazy_static;
+#[macro_use]
+extern crate tera;
+
 pub mod web;
 pub mod schema;
 pub mod models;
+pub mod templates;
