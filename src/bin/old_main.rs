@@ -78,5 +78,5 @@ fn main() {
     };
 
     let user = create_user(&connection, new_email_str, password_str, new_slack_handle);
-    println!("\nSaved user {} with id {}", user.email, user.id);
+    println!("\nSaved user {} with id {}", user.email, user.user_id);
 }

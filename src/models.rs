@@ -1,10 +1,11 @@
-use super::schema::users;
+use super::schema::*;
 use bcrypt::{hash, DEFAULT_COST};
 use diesel;
 
 #[derive(Queryable, Identifiable, Debug)]
+#[primary_key(user_id)]
 pub struct User {
-    pub id: i32,
+    pub user_id: i32,
     pub email: String,
     pub encrypted_password: String,
     pub slack_handle: Option<String>,
@@ -44,3 +45,32 @@ impl<'a> diesel::prelude::Insertable<users::table> for NewUser<'a> {
         encrypted_self.values()
     }
 }
+
+#[derive(Queryable, Identifiable, Debug)]
+#[primary_key(country_id)]
+#[table_name = "countries"]
+pub struct Country {
+    pub country_id: i32,
+    pub name: String,
+    pub flag: String,
+    pub seeding_pot: String,
+}
+
+#[derive(Queryable, Identifiable, Debug)]
+#[primary_key(group_id)]
+#[table_name = "groups"]
+pub struct Group {
+    pub group_id: i32,
+    pub name: String,
+}
+
+#[derive(Queryable, Identifiable, Debug)]
+#[primary_key(country_id, group_id)]
+#[table_name = "group_memberships"]
+pub struct GroupMembership {
+    pub country_id: i32,
+    pub group_id: i32,
+    pub drawn_place: i16,
+    pub current_position: i16,
+}
+
