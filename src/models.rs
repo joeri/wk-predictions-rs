@@ -1,5 +1,6 @@
 use super::schema::*;
 use bcrypt::{hash, DEFAULT_COST};
+use chrono::prelude::*;
 use diesel;
 
 #[derive(Queryable, Identifiable, Debug)]
@@ -74,3 +75,47 @@ pub struct GroupMembership {
     pub current_position: i16,
 }
 
+#[derive(Queryable, Identifiable, Debug)]
+#[primary_key(location_id)]
+pub struct Location {
+    pub location_id: i32,
+    pub city: String,
+    pub stadium: String,
+    // pub capacity: i32, // not yet
+}
+
+#[derive(Queryable, Identifiable, Debug)]
+#[primary_key(stage_id)]
+pub struct Stage {
+    pub stage_id: i32,
+    pub parent_stage_id: Option<i32>,
+    pub stage_type: StageType,
+    pub description: String,
+}
+
+#[derive(Queryable, Identifiable, Debug)]
+#[primary_key(match_participant_id)]
+pub struct MatchParticipant {
+    pub match_participant_id: i32,
+    pub country_id: Option<i32>,
+
+    // Several fields that determine which type of participant this is,
+    // probably should be an option type instead
+    pub stage_id: i32,
+    pub group_id: Option<i32>,
+    pub previous_match_id: Option<i32>,
+    pub group_drawn_place: Option<i32>,
+    pub result: Option<String>,
+}
+
+#[derive(Queryable, Identifiable, Debug)]
+#[primary_key(match_id)]
+#[table_name = "matches"]
+pub struct Match {
+    pub match_id: i32,
+    pub stage_id: i32,
+    pub location_id: i32,
+    pub home_participant_id: i32,
+    pub away_participant_id: i32,
+    pub time: DateTime<Utc>,
+}

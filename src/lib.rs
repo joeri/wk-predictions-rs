@@ -2,6 +2,7 @@
 extern crate diesel;
 #[macro_use]
 extern crate diesel_derive_enum;
+extern crate chrono;
 
 extern crate actix;
 extern crate actix_web;
