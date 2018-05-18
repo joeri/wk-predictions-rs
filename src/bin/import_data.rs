@@ -3,7 +3,7 @@ extern crate dotenv;
 extern crate csv;
 #[macro_use]
 extern crate serde_derive;
-// extern crate chrono;
+extern crate chrono;
 
 extern crate wk_predictions;
 
@@ -210,7 +210,8 @@ struct MatchRow {
 }
 
 fn import_matches(locations: Vec<Location>, countries: Vec<Country>, conn: &PgConnection) -> Result<(Vec<Match>, Vec<(MatchParticipant, MatchParticipant)>), Box<Error>> {
-    use schema::{matches, match_participants};
+    use schema::{matches, match_participants, group_memberships};
+    use chrono::DateTime;
 
     let mut locations_by_city_and_stadium = HashMap::with_capacity(locations.len());
     for location in locations {
@@ -230,29 +231,49 @@ fn import_matches(locations: Vec<Location>, countries: Vec<Country>, conn: &PgCo
         let record = row?;
         println!("{:?}", record);
 
+        let (group_id, drawn_place) = group_memberships::table
+            .filter(
+                group_memberships::country_id.eq(teams_by_country_name.get(&record.home_team).unwrap().country_id)
+            )
+            .select((group_memberships::group_id, group_memberships::drawn_place))
+            .first::<(i32, i16)>(conn)?;
+
         let inserted_home_participant : MatchParticipant = insert_into(match_participants::table)
             .values((
                 match_participants::stage_id.eq(1),
                 match_participants::country_id.eq(teams_by_country_name.get(&record.home_team).unwrap().country_id),
+                match_participants::group_id.eq(group_id),
+                match_participants::group_drawn_place.eq(drawn_place as i32),
             ))
             .returning(match_participants::all_columns)
             .get_result(conn)?;
         println!("{:?}", inserted_home_participant);
 
+        let drawn_place2 = group_memberships::table
+            .filter(
+                group_memberships::country_id.eq(teams_by_country_name.get(&record.away_team).unwrap().country_id)
+            )
+            .select(group_memberships::drawn_place)
+            .first::<i16>(conn)?;
+
         let inserted_away_participant : MatchParticipant = insert_into(match_participants::table)
             .values((
                 match_participants::stage_id.eq(1),
                 match_participants::country_id.eq(teams_by_country_name.get(&record.away_team).unwrap().country_id),
+                match_participants::group_id.eq(group_id),
+                match_participants::group_drawn_place.eq(drawn_place2 as i32),
             ))
             .returning(match_participants::all_columns)
             .get_result(conn)?;
 
         println!("{:?}", inserted_away_participant);
 
+        let time = DateTime::parse_from_str(&record.time, "%d %B %Y %R %:z")?;
+
         let inserted_match = insert_into(matches::table)
             .values((
                 matches::stage_id.eq(1),
-                matches::time.eq(diesel::dsl::now),
+                matches::time.eq(time),
                 matches::location_id.eq(locations_by_city_and_stadium.get(&(record.city, record.stadium)).unwrap().location_id),
                 matches::home_participant_id.eq(inserted_home_participant.match_participant_id),
                 matches::away_participant_id.eq(inserted_away_participant.match_participant_id),
