@@ -83,11 +83,12 @@ fn import_groups(conn: &PgConnection) -> Result<Vec<Group>, Box<Error>> {
 struct GroupMembershipRow {
     country: String,
     group: String,
-    drawn_place: i16,
+    drawn_place: String,
 }
 
 fn import_group_memberships(conn: &PgConnection) -> Result<Vec<GroupMembership>, Box<Error>> {
     use schema::{group_memberships, groups, countries};
+    use diesel::dsl::sql;
 
     let mut result = Vec::new();
 
@@ -95,15 +96,11 @@ fn import_group_memberships(conn: &PgConnection) -> Result<Vec<GroupMembership>,
     for row in rdr.deserialize::<GroupMembershipRow>() {
         let record = row?;
         println!("{:?}", record);
-        let country_and_group = groups::table.filter(groups::name.eq(record.group)).inner_join(countries::table.on(countries::name.eq(record.country))).select((countries::country_id, groups::group_id)).first::<(i32,i32)>(conn)?;
+        let new_groups = groups::table.filter(groups::name.eq(record.group)).inner_join(countries::table.on(countries::name.eq(record.country)));
 
         let inserted = insert_into(group_memberships::table)
-            .values((
-                group_memberships::country_id.eq(country_and_group.0),
-                group_memberships::group_id.eq(country_and_group.1),
-                group_memberships::drawn_place.eq(record.drawn_place),
-                group_memberships::current_position.eq(record.drawn_place),
-            ))
+            .values(new_groups.select((groups::group_id, countries::country_id, sql(&record.drawn_place), sql(&record.drawn_place))))
+            .into_columns((group_memberships::group_id, group_memberships::country_id, group_memberships::drawn_place, group_memberships::current_position))
             .returning((group_memberships::country_id, group_memberships::group_id, group_memberships::drawn_place, group_memberships::current_position))
             .get_result(conn)?;
         println!("{:?}", inserted);
