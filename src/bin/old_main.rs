@@ -2,11 +2,11 @@ extern crate diesel;
 extern crate dotenv;
 
 extern crate wk_predictions;
-use wk_predictions::schema;
 use wk_predictions::models;
+use wk_predictions::schema;
 
-use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use diesel::prelude::*;
 use dotenv::dotenv;
 use std::env;
 
