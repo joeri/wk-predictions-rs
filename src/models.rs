@@ -3,7 +3,7 @@ use bcrypt::{hash, DEFAULT_COST};
 use chrono::prelude::*;
 use diesel;
 
-#[derive(Queryable, Identifiable, Debug)]
+#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
 #[primary_key(user_id)]
 pub struct User {
     pub user_id: i32,
@@ -108,7 +108,7 @@ pub struct MatchParticipant {
     pub result: Option<String>,
 }
 
-#[derive(Queryable, Identifiable, Debug)]
+#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
 #[primary_key(match_id)]
 #[table_name = "matches"]
 pub struct Match {
