@@ -6,62 +6,20 @@ extern crate env_logger;
 extern crate futures;
 
 extern crate wk_predictions;
-use wk_predictions::{schema, web::{app_state, auth, app_state::{AppState, DbExecutor}}};
+use wk_predictions::templates::{Context, TEMPLATE_SERVICE};
+use wk_predictions::{schema, web::{app_state, auth, dashboard, app_state::{AppState, DbExecutor}}};
 
 use diesel::prelude::*;
 use dotenv::dotenv;
 use std::env;
 
+use actix::prelude::*;
 use actix_web::{server, App, AsyncResponder, Error, FutureResponse, HttpRequest, HttpResponse,
                 State,
                 middleware::{Logger,
                              identity::{CookieIdentityPolicy, IdentityService, RequestIdentity}}};
-use actix::prelude::*;
 
 use futures::future::Future;
-
-struct CountUsers;
-
-impl Message for CountUsers {
-    type Result = Result<i64, Error>;
-}
-
-impl Handler<CountUsers> for DbExecutor {
-    type Result = Result<i64, Error>;
-
-    fn handle(&mut self, _msg: CountUsers, _: &mut Self::Context) -> Self::Result {
-        use schema::users::dsl::*;
-
-        // normal diesel operations
-        let result = users
-            .select(diesel::dsl::count_star())
-            .first(&self.connection)
-            .expect("Could not determine number of people, had trouble connecting to DB");
-
-        Ok(result)
-    }
-}
-
-fn index(request: HttpRequest<AppState>, state: State<AppState>) -> FutureResponse<HttpResponse> {
-    state
-        .db
-        .send(CountUsers {})
-        .from_err()
-        .and_then(move |res| match res {
-            Ok(count) => match request.identity() {
-                Some(id) => Ok(HttpResponse::Ok().body(format!(
-                    "There are {} users, and you are one of them ({} to be precise)",
-                    count, id
-                ))),
-                None => Ok(HttpResponse::Ok().body(format!(
-                    "There are {} users, but you're not one of them",
-                    count
-                ))),
-            },
-            Err(_) => Ok(HttpResponse::InternalServerError().into()),
-        })
-        .responder()
-}
 
 fn main() {
     dotenv().ok();
@@ -90,6 +48,7 @@ fn main() {
                     .name("auth-cookie")
                     .secure(false),
             ))
+            .handler("/assets", actix_web::fs::StaticFiles::new("assets"))
             .resource("/login", |r| {
                 r.name("login");
                 r.get().f(|_req| auth::login());
@@ -99,8 +58,8 @@ fn main() {
                 r.get().f(|_req| auth::register());
                 r.post().with2(auth::perform_registration).0.limit(4096);
             })
-            .resource("/", |r| r.get().with2(index))
-            .resource("/index.html", |r| r.get().with2(index))
+            .resource("/", |r| r.get().with2(dashboard::index))
+            .resource("/index.html", |r| r.get().with2(dashboard::index))
     }).bind(&url)
         .unwrap()
         .start();

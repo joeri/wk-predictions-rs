@@ -1,14 +1,16 @@
-use actix_web::{AsyncResponder, Form, FutureResponse, HttpRequest, HttpResponse, State};
-use actix_web::middleware::identity::RequestIdentity;
 use actix::prelude::*;
-use futures::Future;
+use actix_web::middleware::identity::RequestIdentity;
+use actix_web::{AsyncResponder, Form, FutureResponse, HttpRequest, HttpResponse, State};
+use bcrypt::verify;
 use diesel;
 use diesel::prelude::*;
-use bcrypt::verify;
-use web::app_state::{AppState, DbExecutor};
+use futures::Future;
 use models::{NewUser, User};
 use templates::{Context, TEMPLATE_SERVICE};
-extern crate failure;
+use web::app_state::{AppState, DbExecutor};
+use failure;
+
+use actix_web::Error;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct LoginForm {
@@ -33,6 +35,30 @@ pub fn login() -> HttpResponse {
                 .content_type("text/html")
                 .body("Something went wrong")
         }
+    }
+}
+
+pub struct FetchCurrentUser {
+    user_id: i32,
+}
+
+impl Message for FetchCurrentUser {
+    type Result = Result<User, Error>;
+}
+
+impl Handler<FetchCurrentUser> for DbExecutor {
+    type Result = Result<User, Error>;
+
+    fn handle(&mut self, msg: FetchCurrentUser, _: &mut Self::Context) -> Self::Result {
+        use schema::users::dsl::*;
+
+        // normal diesel operations
+        let result = users
+            .filter(user_id.eq(msg.user_id))
+            .first(&self.connection)
+            .expect("Could not extract current user from DB");
+
+        Ok(result)
     }
 }
 

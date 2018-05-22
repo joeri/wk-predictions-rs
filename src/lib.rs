@@ -12,6 +12,8 @@ extern crate serde_derive;
 
 extern crate bcrypt;
 
+extern crate failure;
+
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]

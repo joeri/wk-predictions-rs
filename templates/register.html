@@ -1,4 +1,7 @@
-<body>
+{% extends "layout.html" %}
+{% block title %}Login{% endblock title %}
+
+{% block content %}
 Register for the application:
 <form action="/register" method="POST">
     <label>Username: <input name="username"/></label>
@@ -7,4 +10,4 @@ Register for the application:
 
     <input type="submit" value="Register">
 </form>
-</body>
+{% endblock content %}

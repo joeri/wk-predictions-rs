@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% block head %}
+    <meta charset="utf-8"/>
+    <link rel="stylesheet" href="/assets/style.css" />
+    <title>{% block title %}{% endblock title %} - World Cup Predictions </title>
+    {% endblock head %}
+</head>
+<body>
+    <div id="header">
+        {% if current_user %}
+        Welcome {{ current_user.email }}
+        <a href="/logout">Logout</a>
+        {% else %}
+        <a href="/login">Login</a> or <a href="/register">Register</a>
+        {% endif %}
+    </div>
+    <div id="content">{% block content %}{% endblock content %}</div>
+    <div id="footer">
+        {% block footer %}
+        &copy; Copyright 2018 by Joeri Samson
+        {% endblock footer %}
+    </div>
+</body>
+</html>
