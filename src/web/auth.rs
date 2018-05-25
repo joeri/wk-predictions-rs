@@ -4,13 +4,30 @@ use actix_web::{AsyncResponder, Form, FutureResponse, HttpRequest, HttpResponse,
 use bcrypt::verify;
 use diesel;
 use diesel::prelude::*;
+use failure;
 use futures::Future;
 use models::{NewUser, User};
+use std::error::Error as StdError;
+use std::fmt;
 use templates::{Context, TEMPLATE_SERVICE};
 use web::app_state::{AppState, DbExecutor};
-use failure;
 
 use actix_web::Error;
+
+#[derive(Debug)]
+pub struct UserNotFoundError;
+
+impl fmt::Display for UserNotFoundError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "User not found")
+    }
+}
+
+impl StdError for UserNotFoundError {
+    fn description(&self) -> &str {
+        "User not found"
+    }
+}
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct LoginForm {
@@ -63,11 +80,11 @@ impl Handler<FetchCurrentUser> for DbExecutor {
 }
 
 impl Message for LoginForm {
-    type Result = Result<bool, failure::Error>;
+    type Result = Result<i32, failure::Error>;
 }
 
 impl Handler<LoginForm> for DbExecutor {
-    type Result = Result<bool, failure::Error>;
+    type Result = Result<i32, failure::Error>;
 
     fn handle(&mut self, form: LoginForm, _context: &mut Self::Context) -> Self::Result {
         use schema::users;
@@ -77,16 +94,13 @@ impl Handler<LoginForm> for DbExecutor {
             .first::<User>(&self.connection)
             .optional()?;
 
-        let result = match user {
-            Some(u) => verify(&form.password, &u.encrypted_password)?,
-            None => false,
-        };
-
-        // TODO: set cookie (perhaps in perform_login method itself)
-        // TODO: provide better error (perhaps in result, but probably need to have better error
-        // return mechanism)
-
-        Ok(result)
+        match user {
+            Some(u) => {
+                verify(&form.password, &u.encrypted_password)?;
+                Ok(u.user_id)
+            }
+            None => Err(UserNotFoundError)?,
+        }
     }
 }
 
@@ -101,16 +115,14 @@ pub fn perform_login(
         .send(inner_form.clone())
         .from_err()
         .and_then(move |res| match res {
-            Ok(true) => {
-                req.remember(inner_form.username.clone());
+            Ok(user_id) => {
+                req.remember(user_id.to_string());
                 // TODO: check whether user was redirected to login, and redirect there instead
                 Ok(HttpResponse::SeeOther().header("Location", "/").finish())
-            },
-            Ok(false) => /* should be redirect to /login really */ Ok(HttpResponse::Unauthorized().content_type("text/plain; charset=utf-8").body(format!(
-                "Failed to login by {:?}",
-                inner_form.username,
-            ))),
-            Err(_) => Ok(HttpResponse::InternalServerError().content_type("text/plain; charset=utf-8").body("An unexpected error occurred")),
+            }
+            Err(_) => Ok(HttpResponse::InternalServerError()
+                .content_type("text/plain; charset=utf-8")
+                .body("An unexpected error occurred")),
         })
         .responder()
 }
