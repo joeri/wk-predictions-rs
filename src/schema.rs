@@ -18,6 +18,8 @@ table! {
         user_id -> Int4,
         country_id -> Nullable<Int4>,
         choice -> Int2,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -36,6 +38,8 @@ table! {
         user_id -> Int4,
         winner_id -> Int4,
         runnerup_id -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -59,6 +63,8 @@ table! {
         match_id -> Int4,
         home_score -> Int2,
         away_score -> Int2,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
         time_of_first_goal -> Int2,
     }
 }
@@ -82,6 +88,8 @@ table! {
         home_score -> Int2,
         away_score -> Int2,
         time_of_first_goal -> Int2,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -110,9 +118,14 @@ table! {
 table! {
     users (user_id) {
         user_id -> Int4,
+        display_name -> Nullable<Varchar>,
+        login -> Varchar,
         email -> Varchar,
+        score -> Int4,
         encrypted_password -> Varchar,
         slack_handle -> Nullable<Varchar>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 

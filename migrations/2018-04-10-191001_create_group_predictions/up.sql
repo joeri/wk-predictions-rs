@@ -9,6 +9,9 @@ CREATE TABLE group_predictions (
   -- FOREIGN KEY (group_id, winner_id) REFERENCES group_memberships (group_id, country_id)
   -- FOREIGN KEY (group_id, runnerup_id) REFERENCES group_memberships (group_id, country_id)
 
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
   PRIMARY KEY (group_id, user_id)
 );
 

@@ -1,5 +1,5 @@
 CREATE TABLE matches (
-  match_id SERIAL PRIMARY KEY,
+  match_id INTEGER PRIMARY KEY,
 
   stage_id integer NOT NULL REFERENCES stages,
   location_id integer NOT NULL REFERENCES locations,

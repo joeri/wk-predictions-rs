@@ -1,0 +1,35 @@
+--- src/new_schema.rs	2018-05-23 22:57:08.000000000 +0200
++++ src/schema.rs	2018-05-23 22:54:12.000000000 +0200
+@@ -1,6 +1,12 @@
++#[derive(Debug, DbEnum)]
++pub enum StageType {
++    Group,
++    Knockout,
++}
++
+ table! {
+     countries (country_id) {
+         country_id -> Int4,
+         name -> Varchar,
+         flag -> Varchar,
+         seeding_pot -> Bpchar,
+@@ -88,16 +94,18 @@
+         away_participant_id -> Int4,
+         time -> Timestamptz,
+     }
+ }
+ 
+ table! {
++    use diesel::sql_types::{Int4, Nullable, Varchar};
++    use super::StageTypeMapping;
+     stages (stage_id) {
+         stage_id -> Int4,
+         parent_stage_id -> Nullable<Int4>,
+-        stage_type -> Stage_type,
++        stage_type -> StageTypeMapping,
+         description -> Varchar,
+     }
+ }
+ 
+ table! {
+     users (user_id) {

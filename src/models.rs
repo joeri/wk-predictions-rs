@@ -7,13 +7,20 @@ use diesel;
 #[primary_key(user_id)]
 pub struct User {
     pub user_id: i32,
+    pub display_name: Option<String>,
+    pub login: String,
     pub email: String,
+    pub score: i32,
     pub encrypted_password: String,
     pub slack_handle: Option<String>,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 pub struct NewUser<'a> {
     pub email: &'a str,
+    pub login: &'a str,
+    pub display_name: Option<&'a str>,
     pub password: &'a str,
     pub slack_handle: Option<&'a str>,
 }
@@ -22,6 +29,8 @@ pub struct NewUser<'a> {
 #[table_name = "users"]
 pub struct NewUserWithEncryptedPassword<'a> {
     pub email: &'a str,
+    pub login: &'a str,
+    pub display_name: Option<&'a str>,
     pub encrypted_password: String,
     pub slack_handle: Option<&'a str>,
 }
@@ -39,6 +48,8 @@ impl<'a> diesel::prelude::Insertable<users::table> for NewUser<'a> {
 
         let encrypted_self = NewUserWithEncryptedPassword {
             email: self.email,
+            login: self.login,
+            display_name: self.display_name,
             encrypted_password: hashed_password,
             slack_handle: self.slack_handle,
         };
@@ -93,7 +104,7 @@ pub struct Stage {
     pub description: String,
 }
 
-#[derive(Queryable, Identifiable, Debug)]
+#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
 #[primary_key(match_participant_id)]
 pub struct MatchParticipant {
     pub match_participant_id: i32,
@@ -118,4 +129,25 @@ pub struct Match {
     pub home_participant_id: i32,
     pub away_participant_id: i32,
     pub time: DateTime<Utc>,
+}
+
+#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
+#[primary_key(match_id, user_id)]
+pub struct MatchPrediction {
+    pub match_id: i32,
+    pub user_id: i32,
+
+    pub home_score: i16,
+    pub away_score: i16,
+    pub time_of_first_goal: i16,
+}
+
+#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
+#[primary_key(match_id)]
+pub struct MatchOutcome {
+    pub match_id: i32,
+
+    pub home_score: i16,
+    pub away_score: i16,
+    pub time_of_first_goal: i16,
 }

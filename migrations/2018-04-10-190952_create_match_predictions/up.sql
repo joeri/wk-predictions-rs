@@ -7,5 +7,8 @@ CREATE TABLE match_predictions (
 
   time_of_first_goal smallint NOT NULL,
 
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
   PRIMARY KEY (match_id, user_id)
 );

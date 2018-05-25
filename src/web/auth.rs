@@ -142,6 +142,8 @@ impl Handler<RegistrationForm> for DbExecutor {
         // validation, so should be different step, perhaps NewUser constructor
         let user = NewUser {
             email: &form.username,
+            login: &form.username,
+            display_name: Some(&form.name),
             password: &form.password,
             slack_handle: None,
         };
