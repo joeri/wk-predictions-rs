@@ -6,20 +6,14 @@ extern crate env_logger;
 extern crate futures;
 
 extern crate wk_predictions;
-use wk_predictions::templates::{Context, TEMPLATE_SERVICE};
-use wk_predictions::{schema, web::{app_state, auth, dashboard, app_state::{AppState, DbExecutor}}};
+use wk_predictions::web::{app_state, auth, dashboard, app_state::AppState};
 
-use diesel::prelude::*;
 use dotenv::dotenv;
 use std::env;
 
 use actix::prelude::*;
-use actix_web::{server, App, AsyncResponder, Error, FutureResponse, HttpRequest, HttpResponse,
-                State,
-                middleware::{Logger,
-                             identity::{CookieIdentityPolicy, IdentityService, RequestIdentity}}};
-
-use futures::future::Future;
+use actix_web::{server, App,
+                middleware::{Logger, identity::{CookieIdentityPolicy, IdentityService}}};
 
 fn main() {
     dotenv().ok();
