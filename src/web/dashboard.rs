@@ -74,7 +74,7 @@ fn fetch_current_user(db: &DbExecutor, current_user_id: i32) -> User {
     users
         .filter(user_id.eq(current_user_id))
         .first(&db.connection)
-        .expect("Couldn't fetch leaderboard")
+        .expect("Couldn't fetch current user")
 }
 
 fn fetch_users(db: &DbExecutor, amount: i64) -> Vec<User> {
@@ -192,7 +192,9 @@ pub fn index(
                                     }
                                 }
                             }
-                            Err(_) => HttpResponse::InternalServerError().into(),
+                            Err(_) => HttpResponse::InternalServerError()
+                                .content_type("text/html")
+                                .body("Something went very wrong"),
                         })
                     })
                     .responder(),

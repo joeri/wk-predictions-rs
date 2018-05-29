@@ -48,6 +48,9 @@ fn main() {
                 r.get().f(|_req| auth::login());
                 r.post().with3(auth::perform_login).0.limit(4096);
             })
+            .resource("/logout", |r| {
+                r.get().with2(auth::perform_logout);
+            })
             .resource("/register", |r| {
                 r.get().f(|_req| auth::register());
                 r.post().with2(auth::perform_registration).0.limit(4096);

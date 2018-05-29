@@ -1,18 +1,72 @@
 use actix::prelude::*;
+use actix_web;
+use actix_web::dev::AsyncResult;
 use actix_web::middleware::identity::RequestIdentity;
 use actix_web::{AsyncResponder, Form, FutureResponse, HttpRequest, HttpResponse, State};
+use actix_web::{FromRequest, error::ResponseError};
 use bcrypt::verify;
 use diesel;
 use diesel::prelude::*;
 use failure;
-use futures::Future;
+use futures::{future, Future};
 use models::{NewUser, User};
 use std::error::Error as StdError;
 use std::fmt;
 use templates::{Context, TEMPLATE_SERVICE};
 use web::app_state::{AppState, DbExecutor};
 
-use actix_web::Error;
+pub struct CurrentUser {
+    pub current_user: User,
+}
+
+impl FromRequest<AppState> for CurrentUser {
+    type Config = ();
+    type Result = AsyncResult<Self, actix_web::Error>;
+
+    fn from_request(req: &HttpRequest<AppState>, _cfg: &Self::Config) -> Self::Result {
+        match req.identity() {
+            Some(current_user_id_string) => match current_user_id_string.parse() {
+                Ok(current_user_id) => AsyncResult::async(Box::new(
+                    req.state()
+                        .db
+                        .send(FetchCurrentUser {
+                            user_id: current_user_id,
+                        })
+                        .then(|x| match x {
+                            Ok(Ok(x)) => future::ok(CurrentUser { current_user: x }),
+                            Ok(Err(y)) => future::err(y.into()),
+                            Err(_) => future::err(Unauthenticated.into()),
+                        }),
+                )),
+                _ => AsyncResult::err(Unauthenticated),
+            },
+            None => AsyncResult::err(Unauthenticated),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Unauthenticated;
+
+impl fmt::Display for Unauthenticated {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "User not authenticated")
+    }
+}
+
+impl StdError for Unauthenticated {
+    fn description(&self) -> &str {
+        "User not authenticated"
+    }
+}
+
+impl ResponseError for Unauthenticated {
+    fn error_response(&self) -> HttpResponse {
+        HttpResponse::TemporaryRedirect()
+            .header("Location", "/login")
+            .finish()
+    }
+}
 
 #[derive(Debug)]
 pub struct UserNotFoundError;
@@ -60,11 +114,11 @@ pub struct FetchCurrentUser {
 }
 
 impl Message for FetchCurrentUser {
-    type Result = Result<User, Error>;
+    type Result = Result<User, failure::Error>;
 }
 
 impl Handler<FetchCurrentUser> for DbExecutor {
-    type Result = Result<User, Error>;
+    type Result = Result<User, failure::Error>;
 
     fn handle(&mut self, msg: FetchCurrentUser, _: &mut Self::Context) -> Self::Result {
         use schema::users::dsl::*;
@@ -73,7 +127,7 @@ impl Handler<FetchCurrentUser> for DbExecutor {
         let result = users
             .filter(user_id.eq(msg.user_id))
             .first(&self.connection)
-            .expect("Could not extract current user from DB");
+            .map_err(|_| Unauthenticated)?;
 
         Ok(result)
     }
@@ -186,4 +240,13 @@ pub fn perform_registration(
             Err(_) => Ok(HttpResponse::InternalServerError().content_type("text/plain; charset=utf-8").body("An unexpected error occurred")),
         })
         .responder()
+}
+
+pub fn perform_logout(current_user: CurrentUser, mut req: HttpRequest<AppState>) -> HttpResponse {
+    print!("Logging out user {:?}", current_user.current_user);
+    req.forget();
+
+    HttpResponse::TemporaryRedirect()
+        .header("Location", "/login")
+        .finish()
 }

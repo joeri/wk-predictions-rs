@@ -7,7 +7,7 @@
         Upcoming
         <ol>
         {% for match in upcoming %}
-        <li>{{ match.0.home_country_name }}<span class=country-flag>{{ match.0.home_country_flag }}</span> - {{ match.0.away_country_name }}<span class=country-flag>{{ match.0.away_country_flag }}</span> ({% if match.1 %}prediction already made{% else %}need to make prediction{% endif %}) </li>
+        <li>{{ match.0.home_country_name }}<span class=country-flag>{{ match.0.home_country_flag }}</span> - {{ match.0.away_country_name }}<span class=country-flag>{{ match.0.away_country_flag }}</span> (<a href="/match/{{ match.0.match_id }}/prediction">{% if match.1 %}update prediction{% else %}predict{% endif %}</a>) </li>
         {% endfor %}
         </ol>
     </div>
