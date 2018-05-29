@@ -5,6 +5,11 @@
 <div id=dashboard>
     <div id="upcoming">
         Upcoming
+        <ol>
+        {% for match in upcoming %}
+        <li>{{ match.0.home_country_name }}<span class=country-flag>{{ match.0.home_country_flag }}</span> - {{ match.0.away_country_name }}<span class=country-flag>{{ match.0.away_country_flag }}</span> ({% if match.1 %}prediction already made{% else %}need to make prediction{% endif %}) </li>
+        {% endfor %}
+        </ol>
     </div>
 
     <div id="finished">
@@ -17,6 +22,11 @@
 
     <div id="favourites">
         Favourites
+        <ol>
+        {% for user in leader_board %}
+            <li>{{ user.display_name }}: {{ user.score }}</li>
+        {% endfor %}
+        </ol>
     </div>
 </div>
 {% endblock content %}

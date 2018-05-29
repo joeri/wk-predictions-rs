@@ -140,6 +140,8 @@ pub struct MatchPrediction {
     pub home_score: i16,
     pub away_score: i16,
     pub time_of_first_goal: i16,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
 
 #[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
