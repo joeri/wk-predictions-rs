@@ -313,6 +313,7 @@ fn import_matches(
 
         let inserted_match = insert_into(matches::table)
             .values((
+                matches::match_id.eq(record.match_id),
                 matches::stage_id.eq(1),
                 matches::time.eq(time),
                 matches::location_id.eq(locations_by_city_and_stadium
@@ -387,6 +388,5 @@ fn main() {
     let countries = import_countries(&db_connection).expect("Import Countries table failed");
     import_groups(&db_connection).expect("Import Groups table failed");
     import_group_memberships(&db_connection).expect("Import Group Memberships table failed");
-    import_matches(locations, countries, &db_connection)
-        .expect("Import Group Memberships table failed");
+    import_matches(locations, countries, &db_connection).expect("Import Matches table failed");
 }
