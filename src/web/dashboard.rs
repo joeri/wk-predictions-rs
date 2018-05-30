@@ -1,53 +1,15 @@
-use models::{MatchOutcome, MatchPrediction, User};
+use models::{MatchOutcome, MatchPrediction, MatchWithAllInfo, User};
 use templates::{Context, TEMPLATE_SERVICE};
 use web::app_state::{AppState, DbExecutor};
 
 use actix::prelude::*;
-use actix_web::middleware::identity::RequestIdentity;
-use actix_web::{AsyncResponder, Either, Error, FutureResponse, HttpRequest, HttpResponse, State};
+use actix_web::{AsyncResponder, Either, Error, FutureResponse, HttpRequest, HttpResponse, State,
+                middleware::identity::RequestIdentity};
 use futures::Future;
 
 use diesel::prelude::*;
 
-use chrono::{DateTime, Utc};
-
-#[derive(Debug, Serialize, Deserialize, QueryableByName)]
-struct MatchWithAllInfo {
-    #[sql_type = "diesel::sql_types::Integer"]
-    match_id: i32,
-    #[sql_type = "diesel::sql_types::Integer"]
-    location_id: i32,
-    #[sql_type = "diesel::sql_types::Timestamptz"]
-    time: DateTime<Utc>,
-
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
-    home_group_id: Option<i32>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
-    home_group_drawn_place: Option<i32>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
-    home_previous_match_id: Option<i32>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
-    home_previous_match_result: Option<String>,
-
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
-    home_country_name: Option<String>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
-    home_country_flag: Option<String>,
-
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
-    away_group_id: Option<i32>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
-    away_group_drawn_place: Option<i32>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
-    away_previous_match_id: Option<i32>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
-    away_previous_match_result: Option<String>,
-
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
-    away_country_name: Option<String>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
-    away_country_flag: Option<String>,
-}
+use chrono::Utc;
 
 struct DashboardData {
     current_user: User,

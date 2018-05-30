@@ -6,7 +6,7 @@ extern crate env_logger;
 extern crate futures;
 
 extern crate wk_predictions;
-use wk_predictions::web::{app_state, auth, dashboard, app_state::AppState};
+use wk_predictions::web::{app_state, auth, dashboard, match_predictions, app_state::AppState};
 
 use dotenv::dotenv;
 use std::env;
@@ -57,6 +57,10 @@ fn main() {
             })
             .resource("/", |r| r.get().with2(dashboard::index))
             .resource("/index.html", |r| r.get().with2(dashboard::index))
+            .resource("/match/{id}/prediction", |r| {
+                r.get().with3(match_predictions::edit);
+                r.post().with3(match_predictions::update);
+            })
     }).bind(&url)
         .unwrap()
         .start();

@@ -85,7 +85,7 @@ pub struct GroupMembership {
     pub current_position: i16,
 }
 
-#[derive(Queryable, Identifiable, Debug)]
+#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
 #[primary_key(location_id)]
 pub struct Location {
     pub location_id: i32,
@@ -143,6 +143,18 @@ pub struct MatchPrediction {
     pub updated_at: NaiveDateTime,
 }
 
+#[derive(Insertable, AsChangeset)]
+#[table_name = "match_predictions"]
+pub struct UpdatedPrediction {
+    pub match_id: i32,
+    pub user_id: i32,
+
+    pub home_score: i16,
+    pub away_score: i16,
+
+    pub time_of_first_goal: i16,
+}
+
 #[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
 #[primary_key(match_id)]
 pub struct MatchOutcome {
@@ -151,4 +163,43 @@ pub struct MatchOutcome {
     pub home_score: i16,
     pub away_score: i16,
     pub time_of_first_goal: i16,
+}
+
+// I should consider adding a view according to this data
+#[derive(Debug, Clone, Serialize, Deserialize, QueryableByName)]
+pub struct MatchWithAllInfo {
+    #[sql_type = "diesel::sql_types::Integer"]
+    pub match_id: i32,
+    #[sql_type = "diesel::sql_types::Integer"]
+    pub location_id: i32,
+    #[sql_type = "diesel::sql_types::Timestamptz"]
+    pub time: DateTime<Utc>,
+
+    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
+    pub home_group_id: Option<i32>,
+    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
+    pub home_group_drawn_place: Option<i32>,
+    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
+    pub home_previous_match_id: Option<i32>,
+    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
+    pub home_previous_match_result: Option<String>,
+
+    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
+    pub home_country_name: Option<String>,
+    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
+    pub home_country_flag: Option<String>,
+
+    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
+    pub away_group_id: Option<i32>,
+    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
+    pub away_group_drawn_place: Option<i32>,
+    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
+    pub away_previous_match_id: Option<i32>,
+    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
+    pub away_previous_match_result: Option<String>,
+
+    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
+    pub away_country_name: Option<String>,
+    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
+    pub away_country_flag: Option<String>,
 }

@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block title %}Edit prediction {% endblock title %}
+
+{% block content %}
+<div id=prediction>
+    <h1>{{ match.home_country_name }}<span class=country-flag>{{ match.home_country_flag }}</span> vs. {{ match.away_country_name }}<span class=country-flag>{{ match.away_country_flag }}</span> </h1>
+    <div>Match took place in {{location.stadium}}, {{location.city}} at {{ match.time }}</div>
+    <h2>Prediction</h2>
+    {% if prediction %}
+        <div>Score {{ match.home_country_name }} {{ prediction.home_score }} - {{ prediction.away_score }} {{ match.away_country_name }}.</div>
+        <div>Time of first goal {{ prediction.time_of_first_goal }}</div>
+    {% else %}
+        <div>You didn't make a prediction for this match</div>
+    {% endif %}
+    <h2>Outcome</h2>
+    {% if outcome %}
+        <div>Score {{ match.home_country_name }} {{ outcome.home_score }} - {{ outcome.away_score }} {{ match.away_country_name }}.</div>
+        <div>Time of first goal {{ outcome.time_of_first_goal }}</div>
+    {% else %}
+        <div>Outcome has not yet been entered in the system.</div>
+    {% endif %}
+</div>
+{% endblock content %}
+

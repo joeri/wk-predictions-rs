@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block title %}Edit prediction {% endblock title %}
+
+{% block content %}
+<div id=prediction>
+    <h1>{{ match.home_country_name }}<span class=country-flag>{{ match.home_country_flag }}</span> vs. {{ match.away_country_name }}<span class=country-flag>{{ match.away_country_flag }}</span> </h1>
+    <div>Match takes place in {{location.stadium}}, {{location.city}} at {{ match.time }}</div>
+    <form action="/match/{{ match.match_id}}/prediction" method=POST>
+        <div>
+            <label>{{ match.home_country_name }} <input type=text name=home_score {% if prediction %}value='{{ prediction.home_score }}'{% endif %}/></label> - <label><input type=text name=away_score {% if prediction %}value='{{ prediction.away_score }}'{% endif %} /> {{ match.away_country_name }}</label>
+        </div>
+        <div>
+            <label>Time of first goal <input type=text name=time_of_first_goal {% if prediction %}value='{{ prediction.time_of_first_goal }}'{% endif %} /></label>
+        </div>
+
+
+        <input type=submit>
+    </form>
+</div>
+{% endblock content %}
+

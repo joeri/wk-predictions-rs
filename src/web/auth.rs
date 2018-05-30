@@ -1,12 +1,9 @@
 use actix::prelude::*;
-use actix_web;
-use actix_web::dev::AsyncResult;
-use actix_web::middleware::identity::RequestIdentity;
-use actix_web::{AsyncResponder, Form, FutureResponse, HttpRequest, HttpResponse, State};
-use actix_web::{FromRequest, error::ResponseError};
+use actix_web::{self, AsyncResponder, Form, FromRequest, FutureResponse, HttpRequest,
+                HttpResponse, State, dev::AsyncResult, error::ResponseError,
+                middleware::identity::RequestIdentity};
 use bcrypt::verify;
-use diesel;
-use diesel::prelude::*;
+use diesel::{self, prelude::*};
 use failure;
 use futures::{future, Future};
 use models::{NewUser, User};
