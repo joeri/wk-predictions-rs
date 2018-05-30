@@ -1,7 +1,7 @@
 use super::schema::*;
 use bcrypt::{hash, DEFAULT_COST};
 use chrono::prelude::*;
-use diesel;
+use diesel::prelude::*;
 
 #[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
 #[primary_key(user_id)]
@@ -35,9 +35,8 @@ pub struct NewUserWithEncryptedPassword<'a> {
     pub slack_handle: Option<&'a str>,
 }
 
-impl<'a> diesel::prelude::Insertable<users::table> for NewUser<'a> {
-    type Values =
-        <NewUserWithEncryptedPassword<'a> as diesel::prelude::Insertable<users::table>>::Values;
+impl<'a> Insertable<users::table> for NewUser<'a> {
+    type Values = <NewUserWithEncryptedPassword<'a> as Insertable<users::table>>::Values;
 
     fn values(self) -> Self::Values {
         let plain_text_pw = self.password;
