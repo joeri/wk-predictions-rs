@@ -62,24 +62,25 @@ fn fetch_upcoming(
             .load::<MatchWithAllInfo>(&db.connection)?
     };
 
+    use std::collections::HashMap;
+
+    let match_ids = match_infos
+        .iter()
+        .map(|match_info: &MatchWithAllInfo| match_info.match_id)
+        .collect::<Vec<_>>();
+
+    let id_indices: HashMap<_, _> = match_infos
+        .iter()
+        .enumerate()
+        .map(|(i, u)| (u.match_id, i))
+        .collect();
+
     let predictions_grouped_by_match_infos = {
         use schema::match_predictions::dsl::*;
-        use std::collections::HashMap;
-
-        let match_ids = match_infos
-            .iter()
-            .map(|match_info: &MatchWithAllInfo| match_info.match_id)
-            .collect::<Vec<_>>();
         let predictions = match_predictions
             .filter(user_id.eq(current_user_id))
-            .filter(match_id.eq_any(match_ids))
+            .filter(match_id.eq_any(&match_ids))
             .get_results::<MatchPrediction>(&db.connection)?;
-
-        let id_indices: HashMap<_, _> = match_infos
-            .iter()
-            .enumerate()
-            .map(|(i, u)| (u.match_id, i))
-            .collect();
 
         let mut result = match_infos.iter().map(|_| None).collect::<Vec<_>>();
         for child in predictions {
@@ -93,6 +94,82 @@ fn fetch_upcoming(
     Ok(match_infos
         .into_iter()
         .zip(predictions_grouped_by_match_infos)
+        .collect())
+}
+
+fn fetch_previous(
+    db: &DbExecutor,
+    current_user_id: i32,
+    amount: i64,
+) -> Result<
+    Vec<(
+        MatchWithAllInfo,
+        Option<MatchOutcome>,
+        Option<MatchPrediction>,
+    )>,
+    failure::Error,
+> {
+    use std::collections::HashMap;
+
+    let match_infos = {
+        use schema::full_match_infos::dsl::*;
+
+        full_match_infos
+            .filter(time.le(Utc::now()))
+            .limit(amount)
+            .load::<MatchWithAllInfo>(&db.connection)?
+    };
+
+    let match_ids = match_infos
+        .iter()
+        .map(|match_info: &MatchWithAllInfo| match_info.match_id)
+        .collect::<Vec<_>>();
+
+    let id_indices: HashMap<_, _> = match_infos
+        .iter()
+        .enumerate()
+        .map(|(i, u)| (u.match_id, i))
+        .collect();
+
+    let predictions_grouped_by_match_infos = {
+        use schema::match_predictions::dsl::*;
+
+        let predictions = match_predictions
+            .filter(user_id.eq(current_user_id))
+            .filter(match_id.eq_any(&match_ids))
+            .load::<MatchPrediction>(&db.connection)?;
+
+        let mut result = match_infos.iter().map(|_| None).collect::<Vec<_>>();
+        for child in predictions {
+            let index = id_indices[&child.match_id];
+            result[index] = Some(child);
+        }
+
+        result
+    };
+
+    let results_grouped_by_match_infos = {
+        use schema::match_outcomes::dsl::*;
+
+        let outcomes = match_outcomes
+            .filter(match_id.eq_any(&match_ids))
+            .select((match_id, home_score, away_score, time_of_first_goal))
+            .load::<MatchOutcome>(&db.connection)?;
+
+        let mut result = match_infos.iter().map(|_| None).collect::<Vec<_>>();
+        for child in outcomes {
+            let index = id_indices[&child.match_id];
+            result[index] = Some(child);
+        }
+
+        result
+    };
+
+    Ok(match_infos
+        .into_iter()
+        .zip(results_grouped_by_match_infos)
+        .zip(predictions_grouped_by_match_infos)
+        .map(|((a, b), c)| (a, b, c))
         .collect())
 }
 
@@ -110,7 +187,7 @@ impl Handler<FetchDataForDashboard> for DbExecutor {
             current_user: fetch_current_user(&self, msg.user_id)?,
             leader_board: fetch_users(&self, 10)?,
             upcoming: fetch_upcoming(&self, msg.user_id, 10)?,
-            finished: Vec::new(),
+            finished: fetch_previous(&self, msg.user_id, 10)?,
         })
     }
 }
