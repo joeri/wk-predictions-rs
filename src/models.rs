@@ -166,40 +166,26 @@ pub struct MatchOutcome {
 }
 
 // I should consider adding a view according to this data
-#[derive(Debug, Clone, Serialize, Deserialize, QueryableByName)]
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable, QueryableByName)]
+#[table_name = "full_match_infos"]
 pub struct MatchWithAllInfo {
-    #[sql_type = "diesel::sql_types::Integer"]
     pub match_id: i32,
-    #[sql_type = "diesel::sql_types::Integer"]
     pub location_id: i32,
-    #[sql_type = "diesel::sql_types::Timestamptz"]
     pub time: DateTime<Utc>,
 
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
     pub home_group_id: Option<i32>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
     pub home_group_drawn_place: Option<i32>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
     pub home_previous_match_id: Option<i32>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
     pub home_previous_match_result: Option<String>,
 
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
     pub home_country_name: Option<String>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
     pub home_country_flag: Option<String>,
 
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
     pub away_group_id: Option<i32>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
     pub away_group_drawn_place: Option<i32>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Integer>"]
     pub away_previous_match_id: Option<i32>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
     pub away_previous_match_result: Option<String>,
 
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
     pub away_country_name: Option<String>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::Varchar>"]
     pub away_country_flag: Option<String>,
 }

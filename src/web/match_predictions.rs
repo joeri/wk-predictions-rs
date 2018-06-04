@@ -25,21 +25,6 @@ struct PredictionInfo {
     outcome: Option<MatchOutcome>,
 }
 
-#[derive(Debug)]
-struct MatchNotFound;
-
-impl fmt::Display for MatchNotFound {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Match not found")
-    }
-}
-
-impl StdError for MatchNotFound {
-    fn description(&self) -> &str {
-        "Match not found"
-    }
-}
-
 impl PredictionInfo {
     fn in_future(&self) -> bool {
         self.match_with_info.time > Utc::now()
@@ -55,19 +40,12 @@ impl Handler<FetchPredictionInfo> for DbExecutor {
 
     fn handle(&mut self, msg: FetchPredictionInfo, _: &mut Self::Context) -> Self::Result {
         let match_info = {
-            use diesel::sql_query;
-            use diesel::sql_types::Integer;
+            use schema::full_match_infos::dsl::*;
 
-            let infos = sql_query(include_str!("../queries/predictions/match_info.sql"))
-                .bind::<Integer, _>(msg.match_id)
-                .load::<MatchWithAllInfo>(&self.connection)?;
-
-            if infos.len() == 1 {
-                Ok(infos[0].clone())
-            } else {
-                Err(MatchNotFound)
-            }
-        }?;
+            full_match_infos
+                .filter(match_id.eq(msg.match_id))
+                .first::<MatchWithAllInfo>(&self.connection)?
+        };
 
         let prediction = {
             use schema::match_predictions::dsl::*;

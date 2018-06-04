@@ -8,6 +8,7 @@ use actix_web::{AsyncResponder, Either, Error, FutureResponse, HttpRequest, Http
 use futures::Future;
 
 use diesel::prelude::*;
+use failure;
 
 use chrono::Utc;
 
@@ -52,17 +53,16 @@ fn fetch_users(db: &DbExecutor, amount: i64) -> Vec<User> {
 fn fetch_upcoming(
     db: &DbExecutor,
     current_user_id: i32,
-    amount: i32,
-) -> Vec<(MatchWithAllInfo, Option<MatchPrediction>)> {
-    use diesel::sql_query;
-    use diesel::sql_types::{Integer, Timestamptz};
+    amount: i64,
+) -> Result<Vec<(MatchWithAllInfo, Option<MatchPrediction>)>, failure::Error> {
+    let match_infos = {
+        use schema::full_match_infos::dsl::*;
 
-    let match_infos = sql_query(include_str!(
-        "../queries/dashboard/fetch_upcoming_matches.sql"
-    )).bind::<Timestamptz, _>(Utc::now())
-        .bind::<Integer, _>(amount)
-        .get_results(&db.connection)
-        .expect("Couldn't fetch upcoming matches");
+        full_match_infos
+            .filter(time.gt(Utc::now()))
+            .limit(amount)
+            .load::<MatchWithAllInfo>(&db.connection)?
+    };
 
     let predictions_grouped_by_match_infos = {
         use schema::match_predictions::dsl::*;
@@ -75,8 +75,7 @@ fn fetch_upcoming(
         let predictions = match_predictions
             .filter(user_id.eq(current_user_id))
             .filter(match_id.eq_any(match_ids))
-            .get_results::<MatchPrediction>(&db.connection)
-            .expect("Couldn't fetch predictions");
+            .get_results::<MatchPrediction>(&db.connection)?;
 
         let id_indices: HashMap<_, _> = match_infos
             .iter()
@@ -93,10 +92,10 @@ fn fetch_upcoming(
         result
     };
 
-    match_infos
+    Ok(match_infos
         .into_iter()
         .zip(predictions_grouped_by_match_infos)
-        .collect()
+        .collect())
 }
 
 impl Handler<FetchDataForDashboard> for DbExecutor {
@@ -112,7 +111,7 @@ impl Handler<FetchDataForDashboard> for DbExecutor {
         Ok(DashboardData {
             current_user: fetch_current_user(&self, msg.user_id),
             leader_board: fetch_users(&self, 10),
-            upcoming: fetch_upcoming(&self, msg.user_id, 10),
+            upcoming: fetch_upcoming(&self, msg.user_id, 10)?,
             finished: Vec::new(),
         })
     }

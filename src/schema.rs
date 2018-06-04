@@ -129,6 +129,30 @@ table! {
     }
 }
 
+table! {
+    full_match_infos (match_id) {
+        match_id -> Int4,
+        location_id -> Int4,
+        time -> Timestamptz,
+
+        home_group_id -> Nullable<Int4>,
+        home_previous_match_id -> Nullable<Int4>,
+        home_group_drawn_place -> Nullable<Int4>,
+        home_previous_match_result -> Nullable<Varchar>,
+
+        home_country_name -> Nullable<Varchar>,
+        home_country_flag -> Nullable<Varchar>,
+
+        away_group_id -> Nullable<Int4>,
+        away_previous_match_id -> Nullable<Int4>,
+        away_group_drawn_place -> Nullable<Int4>,
+        away_previous_match_result -> Nullable<Varchar>,
+
+        away_country_name -> Nullable<Varchar>,
+        away_country_flag -> Nullable<Varchar>,
+    }
+}
+
 joinable!(favourites -> countries (country_id));
 joinable!(favourites -> users (user_id));
 joinable!(group_memberships -> countries (country_id));
