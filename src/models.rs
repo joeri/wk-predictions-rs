@@ -103,7 +103,7 @@ pub struct Stage {
     pub description: String,
 }
 
-#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
+#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize, Clone)]
 #[primary_key(match_participant_id)]
 pub struct MatchParticipant {
     pub match_participant_id: i32,

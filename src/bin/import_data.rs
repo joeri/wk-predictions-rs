@@ -4,6 +4,7 @@ extern crate dotenv;
 #[macro_use]
 extern crate serde_derive;
 extern crate chrono;
+extern crate failure;
 
 extern crate wk_predictions;
 
@@ -233,13 +234,53 @@ struct MatchRow {
     city: String,
 }
 
+fn insert_participant(
+    team: String,
+    teams_by_country_name: &HashMap<String, Country>,
+    cache: &mut HashMap<String, MatchParticipant>,
+    conn: &PgConnection,
+) -> Result<MatchParticipant, failure::Error> {
+    let existing = cache.contains_key(&team);
+    if existing {
+        Ok(cache.get(&team).unwrap().clone())
+    } else {
+        let (country_group_id, drawn_place) = {
+            use schema::group_memberships::dsl::*;
+            group_memberships
+                .filter(country_id.eq(teams_by_country_name.get(&team).unwrap().country_id))
+                .select((group_id, drawn_place))
+                .first::<(i32, i16)>(conn)?
+        };
+
+        let inserted_participant: MatchParticipant = {
+            use schema::match_participants::{all_columns, dsl::*};
+
+            insert_into(match_participants)
+                .values((
+                    stage_id.eq(1),
+                    country_id.eq(teams_by_country_name.get(&team).unwrap().country_id),
+                    group_id.eq(country_group_id),
+                    group_drawn_place.eq(drawn_place as i32),
+                ))
+                .returning(all_columns)
+                .get_result(conn)?
+        };
+        println!(
+            "Inserted new participant {} {:?}",
+            team, &inserted_participant
+        );
+        cache.insert(team, inserted_participant.clone());
+        Ok(inserted_participant)
+    }
+}
+
 fn import_matches(
     locations: Vec<Location>,
     countries: Vec<Country>,
     conn: &PgConnection,
 ) -> Result<(Vec<Match>, Vec<(MatchParticipant, MatchParticipant)>), Box<Error>> {
     use chrono::DateTime;
-    use schema::{group_memberships, match_participants, matches};
+    use schema::matches;
 
     let mut locations_by_city_and_stadium = HashMap::with_capacity(locations.len());
     for location in locations {
@@ -248,66 +289,31 @@ fn import_matches(
     }
 
     let mut teams_by_country_name = HashMap::with_capacity(countries.len());
+    let mut participants_by_team_name = HashMap::with_capacity(countries.len());
     for country in countries {
         teams_by_country_name.insert(country.name.clone(), country);
     }
 
-    let mut matches = Vec::new();
     let mut participants = Vec::new();
+    let mut matches = Vec::new();
 
     let mut rdr = csv::Reader::from_path(Path::new("data/matches.csv"))?;
     for row in rdr.deserialize::<MatchRow>() {
         let record = row?;
         println!("{:?}", record);
 
-        let (group_id, drawn_place) = group_memberships::table
-            .filter(
-                group_memberships::country_id.eq(teams_by_country_name
-                    .get(&record.home_team)
-                    .unwrap()
-                    .country_id),
-            )
-            .select((group_memberships::group_id, group_memberships::drawn_place))
-            .first::<(i32, i16)>(conn)?;
-
-        let inserted_home_participant: MatchParticipant = insert_into(match_participants::table)
-            .values((
-                match_participants::stage_id.eq(1),
-                match_participants::country_id.eq(teams_by_country_name
-                    .get(&record.home_team)
-                    .unwrap()
-                    .country_id),
-                match_participants::group_id.eq(group_id),
-                match_participants::group_drawn_place.eq(drawn_place as i32),
-            ))
-            .returning(match_participants::all_columns)
-            .get_result(conn)?;
-        println!("{:?}", inserted_home_participant);
-
-        let drawn_place2 = group_memberships::table
-            .filter(
-                group_memberships::country_id.eq(teams_by_country_name
-                    .get(&record.away_team)
-                    .unwrap()
-                    .country_id),
-            )
-            .select(group_memberships::drawn_place)
-            .first::<i16>(conn)?;
-
-        let inserted_away_participant: MatchParticipant = insert_into(match_participants::table)
-            .values((
-                match_participants::stage_id.eq(1),
-                match_participants::country_id.eq(teams_by_country_name
-                    .get(&record.away_team)
-                    .unwrap()
-                    .country_id),
-                match_participants::group_id.eq(group_id),
-                match_participants::group_drawn_place.eq(drawn_place2 as i32),
-            ))
-            .returning(match_participants::all_columns)
-            .get_result(conn)?;
-
-        println!("{:?}", inserted_away_participant);
+        let home_participant = insert_participant(
+            record.home_team,
+            &teams_by_country_name,
+            &mut participants_by_team_name,
+            conn,
+        )?;
+        let away_participant = insert_participant(
+            record.away_team,
+            &teams_by_country_name,
+            &mut participants_by_team_name,
+            conn,
+        )?;
 
         let time = DateTime::parse_from_str(&record.time, "%d %B %Y %R %:z")?;
 
@@ -320,15 +326,15 @@ fn import_matches(
                     .get(&(record.city, record.stadium))
                     .unwrap()
                     .location_id),
-                matches::home_participant_id.eq(inserted_home_participant.match_participant_id),
-                matches::away_participant_id.eq(inserted_away_participant.match_participant_id),
+                matches::home_participant_id.eq(home_participant.match_participant_id),
+                matches::away_participant_id.eq(away_participant.match_participant_id),
             ))
             .returning(matches::all_columns)
             .get_result(conn)?;
 
         println!("{:?}", inserted_match);
-        participants.push((inserted_home_participant, inserted_away_participant));
         matches.push(inserted_match);
+        participants.push((home_participant.clone(), away_participant.clone()))
     }
 
     Ok((matches, participants))
