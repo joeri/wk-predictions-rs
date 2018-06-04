@@ -31,23 +31,21 @@ impl Message for FetchDataForDashboard {
     type Result = Result<DashboardData, Error>;
 }
 
-fn fetch_current_user(db: &DbExecutor, current_user_id: i32) -> User {
+fn fetch_current_user(db: &DbExecutor, current_user_id: i32) -> Result<User, failure::Error> {
     use schema::users::dsl::*;
 
-    users
+    Ok(users
         .filter(user_id.eq(current_user_id))
-        .first(&db.connection)
-        .expect("Couldn't fetch current user")
+        .first(&db.connection)?)
 }
 
-fn fetch_users(db: &DbExecutor, amount: i64) -> Vec<User> {
+fn fetch_users(db: &DbExecutor, amount: i64) -> Result<Vec<User>, failure::Error> {
     use schema::users::dsl::*;
 
-    users
+    Ok(users
         .order(score.asc())
         .limit(amount)
-        .get_results(&db.connection)
-        .expect("Couldn't fetch leaderboard")
+        .get_results(&db.connection)?)
 }
 
 fn fetch_upcoming(
@@ -109,8 +107,8 @@ impl Handler<FetchDataForDashboard> for DbExecutor {
         // 6 following upcoming matches, with predictions for current player
 
         Ok(DashboardData {
-            current_user: fetch_current_user(&self, msg.user_id),
-            leader_board: fetch_users(&self, 10),
+            current_user: fetch_current_user(&self, msg.user_id)?,
+            leader_board: fetch_users(&self, 10)?,
             upcoming: fetch_upcoming(&self, msg.user_id, 10)?,
             finished: Vec::new(),
         })
