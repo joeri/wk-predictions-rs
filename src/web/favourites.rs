@@ -6,7 +6,7 @@ use web::{app_state::AppState, auth::CurrentUser};
 use actix::prelude::*;
 use actix_web::{AsyncResponder, Form, HttpRequest, HttpResponse, Responder};
 use chrono::Utc;
-use diesel::prelude::*;
+use diesel::{self, prelude::*};
 use failure;
 use futures::Future;
 
@@ -123,30 +123,35 @@ impl Handler<UpdatedFavouriteInfo> for DbExecutor {
             msg.data.fav_4,
         ];
 
-        for (&country_id, choice_idx) in data.iter().zip((1..=4).into_iter()).into_iter() {
-            let favourite = UpdatedFavourite {
-                user_id: msg.user_id,
-                country_id: if country_id == 0 {
-                    None
-                } else {
-                    Some(country_id)
-                },
-                phase: 0,
-                choice: choice_idx,
-            };
+        self.connection
+            .transaction::<_, diesel::result::Error, _>(|| {
+                for (&country_id, choice_idx) in data.iter().zip((1..=4).into_iter()).into_iter() {
+                    let favourite = UpdatedFavourite {
+                        user_id: msg.user_id,
+                        country_id: if country_id == 0 {
+                            None
+                        } else {
+                            Some(country_id)
+                        },
+                        phase: 0,
+                        choice: choice_idx,
+                    };
 
-            {
-                use diesel::insert_into;
-                use schema::favourites::dsl::*;
+                    {
+                        use diesel::insert_into;
+                        use schema::favourites::dsl::*;
 
-                insert_into(favourites)
-                    .values(&favourite)
-                    .on_conflict((user_id, phase, choice))
-                    .do_update()
-                    .set(&favourite)
-                    .execute(&self.connection)?;
-            }
-        }
+                        insert_into(favourites)
+                            .values(&favourite)
+                            .on_conflict((user_id, phase, choice))
+                            .do_update()
+                            .set(&favourite)
+                            .execute(&self.connection)?;
+                    }
+                }
+
+                Ok(())
+            })?;
 
         Ok(())
     }
