@@ -23,15 +23,15 @@
 
     <div id="ranking">
         Ranking
-    </div>
-
-    <div id="favourites">
-        Favourites
         <ol>
         {% for user in leader_board %}
             <li>{{ user.display_name }}: {{ user.score }}</li>
         {% endfor %}
         </ol>
+    </div>
+
+    <div id="favourites">
+        Favourites
     </div>
 </div>
 {% endblock content %}
