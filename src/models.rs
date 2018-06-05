@@ -57,7 +57,7 @@ impl<'a> Insertable<users::table> for NewUser<'a> {
     }
 }
 
-#[derive(Queryable, Identifiable, Debug)]
+#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
 #[primary_key(country_id)]
 #[table_name = "countries"]
 pub struct Country {
@@ -188,4 +188,23 @@ pub struct MatchWithAllInfo {
 
     pub away_country_name: Option<String>,
     pub away_country_flag: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
+pub struct Favourite {
+    pub user_id: i32,
+    pub country_id: Option<i32>,
+    pub choice: i16,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+    pub phase: i16,
+}
+
+#[derive(Insertable, AsChangeset)]
+#[table_name = "favourites"]
+pub struct UpdatedFavourite {
+    pub user_id: i32,
+    pub country_id: Option<i32>,
+    pub choice: i16,
+    pub phase: i16,
 }

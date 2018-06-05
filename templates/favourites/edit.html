@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block title %}Edit prediction {% endblock title %}
+
+{% block content %}
+<form action="/favourites" method=POST>
+    {% set index = 0 %}
+    {% for i in current_selection %}
+        {% set selected = i.1 %}
+        {% set index = index + 1 %}
+        <select name="fav_{{ index }}">
+            <option value="0">Please select a country</option>
+            {% for country in available_countries %}
+            <option value="{{ country.country_id }}" {% if selected == country %}selected{% endif%}>{{ country.name}} {{ country.flag }}</option>
+            {% endfor %}
+        </select>
+    {% endfor %}
+
+    <input type=submit>
+</form>
+{% endblock content %}

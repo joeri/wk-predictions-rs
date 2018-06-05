@@ -15,7 +15,7 @@
     <div id="finished">
         Finished
         <ol>
-        {% for match in finsihed %}
+        {% for match in finished %}
         <li>{{match.0.time}}  {{ match.0.home_country_name }}<span class=country-flag>{{ match.0.home_country_flag }}</span> - {{ match.0.away_country_name }}<span class=country-flag>{{ match.0.away_country_flag }}</span> {% if match.2 %}you predicted {{ match.2.home_score }} - {{ match.2.away_score }}{% else %}you made no prediction{% endif %}, actual result {% if match.1 %}not yet known{% else %}{{ match.1.home_score }} - {{ match.1.away_score }}{% endif %} </li>
         {% endfor %}
         </ol>
@@ -32,6 +32,15 @@
 
     <div id="favourites">
         Favourites
+
+        <ul>
+        {% for favourite in favourites %}
+        <li>{% if favourite.1 %}{{ favourite.1.name }}<span class="country-flag">{{ favourite.1.flag}}</span>
+            {% else %}You haven&apos;t selected a favourite country yet
+            {% endif %}</li>
+        {% endfor %}
+        </ul>
+        <a href=/favourites>Update</a>
     </div>
 </div>
 {% endblock content %}

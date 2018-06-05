@@ -1,4 +1,4 @@
-use models::{MatchOutcome, MatchPrediction, MatchWithAllInfo, User};
+use models::{Country, Favourite, MatchOutcome, MatchPrediction, MatchWithAllInfo, User};
 use templates::{Context, TEMPLATE_SERVICE};
 use web::app_state::{AppState, DbExecutor};
 
@@ -21,6 +21,7 @@ struct DashboardData {
         Option<MatchOutcome>,
         Option<MatchPrediction>,
     )>,
+    favourites: Vec<(Favourite, Option<Country>)>,
 }
 
 struct FetchDataForDashboard {
@@ -173,6 +174,40 @@ fn fetch_previous(
         .collect())
 }
 
+fn fetch_favourites(
+    db: &DbExecutor,
+    current_user_id: i32,
+) -> Result<Vec<(Favourite, Option<Country>)>, failure::Error> {
+    let mut current_selection = {
+        use schema::countries;
+        use schema::favourites::dsl::*;
+
+        favourites
+            .filter(user_id.eq(current_user_id))
+            .order(choice)
+            .left_join(countries::table)
+            .load(&db.connection)?
+    };
+
+    if current_selection.len() < 4 {
+        for i in (current_selection.len() + 1)..=4 {
+            current_selection.push((
+                Favourite {
+                    user_id: current_user_id,
+                    country_id: None,
+                    choice: i as i16,
+                    created_at: Utc::now().naive_local(), // Doesn't matter too much if this is the right method (as opposed to naive_utc)
+                    updated_at: Utc::now().naive_local(),
+                    phase: 0,
+                },
+                None,
+            ));
+        }
+    }
+
+    Ok(current_selection)
+}
+
 impl Handler<FetchDataForDashboard> for DbExecutor {
     type Result = Result<DashboardData, Error>;
 
@@ -188,6 +223,7 @@ impl Handler<FetchDataForDashboard> for DbExecutor {
             leader_board: fetch_users(&self, 10)?,
             upcoming: fetch_upcoming(&self, msg.user_id, 10)?,
             finished: fetch_previous(&self, msg.user_id, 10)?,
+            favourites: fetch_favourites(&self, msg.user_id)?,
         })
     }
 }
@@ -214,6 +250,7 @@ pub fn index(
                                 context.add("leader_board", &dashboard_data.leader_board);
                                 context.add("upcoming", &dashboard_data.upcoming);
                                 context.add("finished", &dashboard_data.finished);
+                                context.add("favourites", &dashboard_data.favourites);
 
                                 let rendered = TEMPLATE_SERVICE.render("dashboard.html", &context);
                                 match rendered {

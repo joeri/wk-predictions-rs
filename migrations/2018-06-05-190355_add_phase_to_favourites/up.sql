@@ -6,4 +6,6 @@ ALTER TABLE favourites
   ;
 
 ALTER TABLE favourites
-  ADD CONSTRAINT favourites_user_id_country_id_key UNIQUE(user_id, phase, country_id);
+  ADD CONSTRAINT favourites_user_id_country_id_key UNIQUE(user_id, phase, country_id),
+  ADD CONSTRAINT favourites_user_id_phase_choice_key UNIQUE(user_id, phase, choice)
+  ;
