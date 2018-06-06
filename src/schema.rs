@@ -171,6 +171,7 @@ joinable!(matches -> stages (stage_id));
 allow_tables_to_appear_in_same_query!(
     countries,
     favourites,
+    full_match_infos,
     group_memberships,
     group_predictions,
     groups,

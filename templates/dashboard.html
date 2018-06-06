@@ -10,6 +10,8 @@
         <li>{{match.0.time}}  {{ match.0.home_country_name }}<span class=country-flag>{{ match.0.home_country_flag }}</span> - {{ match.0.away_country_name }}<span class=country-flag>{{ match.0.away_country_flag }}</span> (<a href="/match/{{ match.0.match_id }}/prediction">{% if match.1 %}update prediction{% else %}predict{% endif %}</a>) </li>
         {% endfor %}
         </ol>
+
+        <a href="/predictions">Predict all upcoming matches</a>
     </div>
 
     <div id="finished">

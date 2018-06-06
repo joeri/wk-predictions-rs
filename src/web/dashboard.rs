@@ -59,6 +59,7 @@ fn fetch_upcoming(
 
         full_match_infos
             .filter(time.gt(Utc::now()))
+            .order(time.asc())
             .limit(amount)
             .load::<MatchWithAllInfo>(&db.connection)?
     };
@@ -117,6 +118,7 @@ fn fetch_previous(
 
         full_match_infos
             .filter(time.le(Utc::now()))
+            .order(time.desc())
             .limit(amount)
             .load::<MatchWithAllInfo>(&db.connection)?
     };

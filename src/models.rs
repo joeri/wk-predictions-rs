@@ -143,7 +143,7 @@ pub struct MatchPrediction {
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Insertable, AsChangeset)]
+#[derive(Debug, Insertable, AsChangeset)]
 #[table_name = "match_predictions"]
 pub struct UpdatedPrediction {
     pub match_id: i32,

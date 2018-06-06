@@ -68,6 +68,10 @@ fn main() {
                 r.get().with2(favourites::edit);
                 r.post().with3(favourites::update);
             })
+            .resource("/predictions", |r| {
+                r.get().with2(match_predictions::bulk_edit);
+                r.post().with3(match_predictions::bulk_update);
+            })
     }).bind(&url)
         .unwrap()
         .start();
