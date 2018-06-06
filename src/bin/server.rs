@@ -6,15 +6,17 @@ extern crate env_logger;
 extern crate futures;
 
 extern crate wk_predictions;
-use wk_predictions::web::{app_state, auth, dashboard, favourites, match_predictions,
-                          app_state::AppState};
+use wk_predictions::web::{app_state, app_state::AppState, auth, dashboard, favourites,
+                          match_predictions};
 
 use dotenv::dotenv;
 use std::env;
 
 use actix::prelude::*;
-use actix_web::{server, App,
-                middleware::{Logger, identity::{CookieIdentityPolicy, IdentityService}}};
+use actix_web::{middleware::{identity::{CookieIdentityPolicy, IdentityService},
+                             Logger},
+                server,
+                App};
 
 fn main() {
     dotenv().ok();

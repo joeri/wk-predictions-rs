@@ -1,6 +1,6 @@
 use actix::prelude::*;
-use diesel::Connection;
 use diesel::pg::PgConnection;
+use diesel::Connection;
 
 pub struct DbExecutor {
     pub connection: PgConnection,

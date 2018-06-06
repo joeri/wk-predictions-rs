@@ -10,7 +10,7 @@ use diesel::prelude::*;
 use failure;
 use futures::Future;
 
-use std::{fmt, error::Error as StdError};
+use std::{error::Error as StdError, fmt};
 
 struct FetchPredictionInfo {
     user_id: i32,

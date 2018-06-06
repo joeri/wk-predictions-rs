@@ -18,7 +18,7 @@ use std::path::Path;
 
 use std::collections::HashMap;
 
-use wk_predictions::{schema, models::*};
+use wk_predictions::{models::*, schema};
 
 #[derive(Deserialize, Debug)]
 struct CountryRow {
