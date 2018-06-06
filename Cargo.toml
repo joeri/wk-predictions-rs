@@ -5,8 +5,7 @@ authors = ["Joeri Samson <joerisamson@gmail.com>"]
 
 [dependencies]
 actix = "0.5"
-actix-web = { version = "0.6", features=["alpn"] }
-openssl = { version="0.10", features = ["v110"] }
+actix-web = { version = "0.6" }
 diesel = { version = "1.3.0", features = ["postgres", "chrono"] }
 diesel-derive-enum = { version = "0.4", features = ["postgres"] }
 serde = "1.0"
