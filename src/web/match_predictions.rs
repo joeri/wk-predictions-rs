@@ -79,11 +79,6 @@ pub fn edit(
     path: Path<(i32,)>,
     req: HttpRequest<AppState>,
 ) -> FutureResponse<HttpResponse> {
-    println!(
-        "We have a user identity {:?}",
-        current_user.current_user.user_id
-    );
-
     req.state()
         .db
         .send(FetchPredictionInfo {
@@ -201,10 +196,6 @@ pub fn update(
     path_and_form: (Path<(i32,)>, Form<PredictionForm>),
     req: HttpRequest<AppState>,
 ) -> FutureResponse<HttpResponse> {
-    println!(
-        "We have a user identity {:?}",
-        current_user.current_user.user_id
-    );
     let (path, form) = path_and_form;
     req.state()
         .db

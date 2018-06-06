@@ -233,46 +233,41 @@ pub fn index(
     state: State<AppState>,
 ) -> Either<FutureResponse<HttpResponse>, HttpResponse> {
     match request.identity() {
-        Some(current_user_id) => {
-            println!("We have a user identity {:?}", current_user_id);
-            Either::A(
-                state
-                    .db
-                    .send(FetchDataForDashboard {
-                        user_id: current_user_id.parse().unwrap(),
-                    })
-                    .from_err()
-                    .and_then(move |res| {
-                        Ok(match res {
-                            Ok(dashboard_data) => {
-                                let mut context = Context::new();
-                                context.add("current_user", &dashboard_data.current_user);
-                                context.add("leader_board", &dashboard_data.leader_board);
-                                context.add("upcoming", &dashboard_data.upcoming);
-                                context.add("finished", &dashboard_data.finished);
-                                context.add("favourites", &dashboard_data.favourites);
+        Some(current_user_id) => Either::A(
+            state
+                .db
+                .send(FetchDataForDashboard {
+                    user_id: current_user_id.parse().unwrap(),
+                })
+                .from_err()
+                .and_then(move |res| {
+                    Ok(match res {
+                        Ok(dashboard_data) => {
+                            let mut context = Context::new();
+                            context.add("current_user", &dashboard_data.current_user);
+                            context.add("leader_board", &dashboard_data.leader_board);
+                            context.add("upcoming", &dashboard_data.upcoming);
+                            context.add("finished", &dashboard_data.finished);
+                            context.add("favourites", &dashboard_data.favourites);
 
-                                let rendered = TEMPLATE_SERVICE.render("dashboard.html", &context);
-                                match rendered {
-                                    Ok(body) => {
-                                        HttpResponse::Ok().content_type("text/html").body(body)
-                                    }
-                                    Err(error) => {
-                                        println!("{:?}", error);
-                                        HttpResponse::InternalServerError()
-                                            .content_type("text/html")
-                                            .body("Something went wrong")
-                                    }
+                            let rendered = TEMPLATE_SERVICE.render("dashboard.html", &context);
+                            match rendered {
+                                Ok(body) => HttpResponse::Ok().content_type("text/html").body(body),
+                                Err(error) => {
+                                    println!("{:?}", error);
+                                    HttpResponse::InternalServerError()
+                                        .content_type("text/html")
+                                        .body("Something went wrong")
                                 }
                             }
-                            Err(_) => HttpResponse::InternalServerError()
-                                .content_type("text/html")
-                                .body("Something went very wrong"),
-                        })
+                        }
+                        Err(_) => HttpResponse::InternalServerError()
+                            .content_type("text/html")
+                            .body("Something went very wrong"),
                     })
-                    .responder(),
-            )
-        }
+                })
+                .responder(),
+        ),
         None => {
             let mut context = Context::new();
 
