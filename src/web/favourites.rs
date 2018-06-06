@@ -125,14 +125,9 @@ impl Handler<UpdatedFavouriteInfo> for DbExecutor {
 
         self.connection
             .transaction::<_, diesel::result::Error, _>(|| {
-                {
-                    use schema::favourites::dsl::*;
-                    diesel::update(favourites.filter(user_id.eq(msg.user_id)))
-                        .set((country_id.eq::<Option<i32>>(None),))
-                        .execute(&self.connection)?;
-                }
+                let mut changes = Vec::new();
                 for (&country_id, choice_idx) in data.iter().zip((1..=4).into_iter()).into_iter() {
-                    let favourite = UpdatedFavourite {
+                    changes.push(UpdatedFavourite {
                         user_id: msg.user_id,
                         country_id: if country_id == 0 {
                             None
@@ -141,19 +136,20 @@ impl Handler<UpdatedFavouriteInfo> for DbExecutor {
                         },
                         phase: 0,
                         choice: choice_idx,
-                    };
+                    });
+                }
 
-                    {
-                        use diesel::insert_into;
-                        use schema::favourites::dsl::*;
+                {
+                    use diesel::insert_into;
+                    use diesel::pg::upsert::excluded;
+                    use schema::favourites::dsl::*;
 
-                        insert_into(favourites)
-                            .values(&favourite)
-                            .on_conflict((user_id, phase, choice))
-                            .do_update()
-                            .set(&favourite)
-                            .execute(&self.connection)?;
-                    }
+                    insert_into(favourites)
+                        .values(&changes)
+                        .on_conflict((user_id, phase, choice))
+                        .do_update()
+                        .set(country_id.eq(excluded(country_id)))
+                        .execute(&self.connection)?;
                 }
 
                 Ok(())
