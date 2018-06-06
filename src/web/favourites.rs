@@ -125,6 +125,12 @@ impl Handler<UpdatedFavouriteInfo> for DbExecutor {
 
         self.connection
             .transaction::<_, diesel::result::Error, _>(|| {
+                {
+                    use schema::favourites::dsl::*;
+                    diesel::update(favourites.filter(user_id.eq(msg.user_id)))
+                        .set((country_id.eq::<Option<i32>>(None),))
+                        .execute(&self.connection)?;
+                }
                 for (&country_id, choice_idx) in data.iter().zip((1..=4).into_iter()).into_iter() {
                     let favourite = UpdatedFavourite {
                         user_id: msg.user_id,
