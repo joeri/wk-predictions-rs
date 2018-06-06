@@ -75,14 +75,14 @@ impl Handler<FetchPredictionInfo> for DbExecutor {
 }
 
 pub fn edit(
-    current_user: CurrentUser,
+    auth: CurrentUser,
     path: Path<(i32,)>,
     req: HttpRequest<AppState>,
 ) -> FutureResponse<HttpResponse> {
     req.state()
         .db
         .send(FetchPredictionInfo {
-            user_id: current_user.current_user.user_id,
+            user_id: auth.current_user.user_id,
             match_id: path.0,
         })
         .from_err()
@@ -90,7 +90,7 @@ pub fn edit(
             Ok(match prediction_info {
                 Ok(info) => {
                     let mut context = Context::new();
-                    context.add("current_user", &current_user.current_user);
+                    context.add("current_user", &auth.current_user);
                     context.add("match", &info.match_with_info);
                     context.add("location", &info.location);
                     context.add("prediction", &info.prediction);
@@ -192,7 +192,7 @@ impl Handler<UpdatePredictionInfo> for DbExecutor {
 }
 
 pub fn update(
-    current_user: CurrentUser,
+    auth: CurrentUser,
     path_and_form: (Path<(i32,)>, Form<PredictionForm>),
     req: HttpRequest<AppState>,
 ) -> FutureResponse<HttpResponse> {
@@ -200,7 +200,7 @@ pub fn update(
     req.state()
         .db
         .send(UpdatePredictionInfo {
-            user_id: current_user.current_user.user_id,
+            user_id: auth.current_user.user_id,
             match_id: path.0,
             prediction: form.into_inner(),
         })
