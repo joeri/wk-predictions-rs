@@ -4,16 +4,19 @@
     {% block head %}
     <meta charset="utf-8"/>
     <link rel="stylesheet" href="/assets/style.css" />
+    <script type="text/javascript" src="/assets/utils.js"></script>
     <title>{% block title %}{% endblock title %} - World Cup Predictions </title>
     {% endblock head %}
 </head>
 <body>
     <div id="header">
         {% if current_user %}
-        Welcome {{ current_user.email }}
-        <a href="/logout">Logout</a>
+        <div class=home><a href="/">Home</a></div>
+        <div class="greeting">Welcome {{ current_user.display_name }}</div>
+        <div class=logout><a href="/logout">Logout</a></div>
         {% else %}
-        <a href="/login">Login</a> or <a href="/register">Register</a>
+        <div class=home><a href="/">Glazen Bol 2018</a></div>
+        <div class=login><a href="/login">Login</a> or </div><div class=register><a href="/register">Register</a></div>
         {% endif %}
     </div>
     <div id="content">{% block content %}{% endblock content %}</div>

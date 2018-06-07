@@ -15,7 +15,7 @@
             {% set prediction = match_and_prediction.1 %}
             <div class=row>
                 <input type=hidden name=match_id value='{{ match.match_id }}'>
-                <div>{{ match.home_country_name }} <span class="country-flage">{{ match.home_country_flag }}</span> - {{ match.away_country_name }} <span class="country-flage">{{ match.away_country_flag }}</span></div>
+                <div>{{ match.home_country_name }} <span class="country-flag">{{ match.home_country_flag }}</span> - {{ match.away_country_name }} <span class="country-flag">{{ match.away_country_flag }}</span></div>
                 <div><input type=text name="home_score" {% if prediction %}value='{{ prediction.home_score }}'{% endif %}/> - <input type=text name=away_score {% if prediction %}value='{{ prediction.away_score }}'{% endif %} /></div>
                 <div><input type=text name=time_of_first_goal {% if prediction %}value='{{ prediction.time_of_first_goal }}'{% endif %} /></div>
             </div>

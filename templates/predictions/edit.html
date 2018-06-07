@@ -4,7 +4,7 @@
 {% block content %}
 <div id=prediction>
     <h1>{{ match.home_country_name }}<span class=country-flag>{{ match.home_country_flag }}</span> vs. {{ match.away_country_name }}<span class=country-flag>{{ match.away_country_flag }}</span> </h1>
-    <div>Match takes place in {{location.stadium}}, {{location.city}} at {{ match.time }}</div>
+    <div>Match takes place in {{location.stadium}}, {{location.city}} at <span class=time  data-time="{{ match.time | date(format="%s") }}">{{ match.time | date(format="%a %B %d (%H:%M %Z)") }}</span></div>
     <form action="/match/{{ match.match_id}}/prediction" method=POST>
         <div>
             <label>{{ match.home_country_name }} <input type=text name=home_score {% if prediction %}value='{{ prediction.home_score }}'{% endif %}/></label> - <label><input type=text name=away_score {% if prediction %}value='{{ prediction.away_score }}'{% endif %} /> {{ match.away_country_name }}</label>

@@ -4,27 +4,27 @@
 {% block content %}
 <div id=dashboard>
     <div id="upcoming">
-        Upcoming
-        <ol>
+        <h4>Upcoming matches</h4>
+        <div class=upcoming-list>
         {% for match in upcoming %}
-        <li>{{match.0.time}}  {{ match.0.home_country_name }}<span class=country-flag>{{ match.0.home_country_flag }}</span> - {{ match.0.away_country_name }}<span class=country-flag>{{ match.0.away_country_flag }}</span> (<a href="/match/{{ match.0.match_id }}/prediction">{% if match.1 %}update prediction{% else %}predict{% endif %}</a>) </li>
+        <div><span class=time data-time="{{ match.0.time | date(format="%s") }}">{{match.0.time | date(format="%a %B %d (%H:%M %Z)") }}</span> {{ match.0.home_country_name }}<span class=country-flag>{{ match.0.home_country_flag }}</span> - {{ match.0.away_country_name }}<span class=country-flag>{{ match.0.away_country_flag }}</span> (<a href="/match/{{ match.0.match_id }}/prediction">{% if match.1 %}update prediction{% else %}predict{% endif %}</a>) </div>
         {% endfor %}
-        </ol>
+        </div>
 
         <a href="/predictions">Predict all upcoming matches</a>
     </div>
 
     <div id="finished">
-        Finished
+        <h4>Past matches</h4>
         <ol>
         {% for match in finished %}
-        <li>{{match.0.time}}  {{ match.0.home_country_name }}<span class=country-flag>{{ match.0.home_country_flag }}</span> - {{ match.0.away_country_name }}<span class=country-flag>{{ match.0.away_country_flag }}</span> {% if match.2 %}you predicted {{ match.2.home_score }} - {{ match.2.away_score }}{% else %}you made no prediction{% endif %}, actual result {% if match.1 %}not yet known{% else %}{{ match.1.home_score }} - {{ match.1.away_score }}{% endif %} </li>
+        <li><span class=time data-time="{{ match.0.time | date(format="%s") }}">{{match.0.time | date(format="%a %B %d (%H:%M %Z)") }}</span> {{ match.0.home_country_name }}<span class=country-flag>{{ match.0.home_country_flag }}</span> - {{ match.0.away_country_name }}<span class=country-flag>{{ match.0.away_country_flag }}</span> {% if match.2 %}you predicted {{ match.2.home_score }} - {{ match.2.away_score }}{% else %}you made no prediction{% endif %}, actual result {% if match.1 %}not yet known{% else %}{{ match.1.home_score }} - {{ match.1.away_score }}{% endif %} </li>
         {% endfor %}
         </ol>
     </div>
 
     <div id="ranking">
-        Ranking
+        <h4>Ranking (top 10)</h4>
         <ol>
         {% for user in leader_board %}
             <li>{{ user.display_name }}: {{ user.score }}</li>
@@ -33,8 +33,8 @@
     </div>
 
     <div id="favourites">
-        Favourites
-
+        <h4>Favourites</h4>
+        Favourites during the group round (you can choose new favourites once the group phase is over).
         <ul>
         {% for favourite in favourites %}
         <li>{% if favourite.1 %}{{ favourite.1.name }}<span class="country-flag">{{ favourite.1.flag}}</span>
