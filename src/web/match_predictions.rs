@@ -437,7 +437,6 @@ pub fn bulk_update(
     form: Vec<MatchPredictionItem>,
     req: HttpRequest<AppState>,
 ) -> FutureResponse<HttpResponse> {
-    println!("{:?}", form);
     req.state()
         .db
         .send(BulkUpdatePredictions {
