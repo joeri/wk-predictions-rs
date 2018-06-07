@@ -229,12 +229,17 @@ pub fn perform_registration(
         .send(inner_form.clone())
         .from_err()
         .and_then(move |res| match res {
-            Ok(user) => /* should be redirect to login really */ Ok(HttpResponse::Ok().content_type("text/plain; charset=utf-8").body(format!(
-                "Successfully registered {} as {} with id {}",
-                inner_form.username, user.email, user.user_id
-            ))),
-            Err(DatabaseError(DatabaseErrorKind::UniqueViolation, _)) => Ok(HttpResponse::PreconditionFailed().content_type("text/plain; charset=utf-8").body(format!("User {} already registered", inner_form.username))),
-            Err(_) => Ok(HttpResponse::InternalServerError().content_type("text/plain; charset=utf-8").body("An unexpected error occurred")),
+            Ok(user) => Ok(HttpResponse::SeeOther()
+                .header("Location", "/login")
+                .finish()),
+            Err(DatabaseError(DatabaseErrorKind::UniqueViolation, _)) => {
+                Ok(HttpResponse::PreconditionFailed()
+                    .content_type("text/plain; charset=utf-8")
+                    .body(format!("User {} already registered", inner_form.username)))
+            }
+            Err(_) => Ok(HttpResponse::InternalServerError()
+                .content_type("text/plain; charset=utf-8")
+                .body("An unexpected error occurred")),
         })
         .responder()
 }
