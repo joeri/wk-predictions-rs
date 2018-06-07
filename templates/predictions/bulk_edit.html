@@ -2,21 +2,27 @@
 {% block title %}Edit many prediction {% endblock title %}
 
 {% block content %}
-<div id=prediction>
+<div id=bulk-prediction>
     <h1>Predict {{ matches | length }} upcoming matches</h1>
     <form action="/predictions" method=POST>
+        <div class=row>
+            <div>Match</div>
+            <div>Outcome</div>
+            <div>Time of first goal</div>
+        </div>
         {% for match_and_prediction in matches %}
             {% set match = match_and_prediction.0 %}
             {% set prediction = match_and_prediction.1 %}
-            <div>
+            <div class=row>
                 <input type=hidden name=match_id value='{{ match.match_id }}'>
-                <label>{{ match.home_country_name }} <input type=text name="home_score" {% if prediction %}value='{{ prediction.home_score }}'{% endif %}/></label> - <label><input type=text name=away_score {% if prediction %}value='{{ prediction.away_score }}'{% endif %} /> {{ match.away_country_name }}</label>
-                <label>Time of first goal <input type=text name=time_of_first_goal {% if prediction %}value='{{ prediction.time_of_first_goal }}'{% endif %} /></label>
+                <div>{{ match.home_country_name }} <span class="country-flage">{{ match.home_country_flag }}</span> - {{ match.away_country_name }} <span class="country-flage">{{ match.away_country_flag }}</span></div>
+                <div><input type=text name="home_score" {% if prediction %}value='{{ prediction.home_score }}'{% endif %}/> - <input type=text name=away_score {% if prediction %}value='{{ prediction.away_score }}'{% endif %} /></div>
+                <div><input type=text name=time_of_first_goal {% if prediction %}value='{{ prediction.time_of_first_goal }}'{% endif %} /></div>
             </div>
         {% endfor %}
 
 
-        <input type=submit>
+        <input type=submit value="Update Predictions">
     </form>
 </div>
 {% endblock content %}

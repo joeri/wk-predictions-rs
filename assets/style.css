@@ -1,5 +1,37 @@
+body {
+  display: grid;
+  grid-template-rows: 40px auto 40px;
+  min-height: 100vh;
+}
+
+#header {
+  grid-row: 1;
+}
+
+#content {
+  grid-row: 2;
+}
+
+#footer {
+  grid-row: 3;
+  text-align: center;
+}
+
 #dashboard {
   display: grid;
+  grid-template-rows: 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
+}
+
+#upcoming {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+/* Bulk prediction page needs tweaking */
+#bulk-prediction .row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
 .country-flag {
