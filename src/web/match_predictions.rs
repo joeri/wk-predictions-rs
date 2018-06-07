@@ -361,10 +361,7 @@ impl FromRequest<AppState> for Vec<MatchPredictionItem> {
     type Result = AsyncResult<Self, actix_web::Error>;
 
     fn from_request(req: &HttpRequest<AppState>, _cfg: &Self::Config) -> Self::Result {
-        let fut = Form::<Vec<(String, String)>>::from_request(
-            req,
-            &<Form<Vec<(String, String)>> as FromRequest<AppState>>::Config::default(),
-        ).and_then(|tuples_form| {
+        let fut = Form::<Vec<(String, String)>>::extract(req).and_then(|tuples_form| {
             let tuples = tuples_form.into_inner();
             let mut result = Vec::new();
 
