@@ -70,3 +70,17 @@
  joinable!(group_memberships -> groups (group_id));
  joinable!(group_predictions -> groups (group_id));
  joinable!(group_predictions -> users (user_id));
+@@ -168,12 +168,13 @@ joinable!(match_predictions -> users (user_id));
+ joinable!(matches -> locations (location_id));
+ joinable!(matches -> stages (stage_id));
+ 
+ allow_tables_to_appear_in_same_query!(
+     countries,
+     favourites,
++    full_match_infos,
+     group_memberships,
+     group_predictions,
+     groups,
+     locations,
+     match_outcomes,
+     match_participants,
