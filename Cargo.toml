@@ -19,3 +19,4 @@ tera = "0.11"
 lazy_static = "1.0.0"
 csv = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
+rand = "0.5"

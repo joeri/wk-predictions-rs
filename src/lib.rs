@@ -2,22 +2,20 @@
 extern crate diesel;
 #[macro_use]
 extern crate diesel_derive_enum;
-extern crate chrono;
-
-extern crate actix;
-extern crate actix_web;
-extern crate futures;
 #[macro_use]
 extern crate serde_derive;
-
-extern crate bcrypt;
-
-extern crate failure;
-
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate tera;
+
+extern crate actix;
+extern crate actix_web;
+extern crate bcrypt;
+extern crate chrono;
+extern crate failure;
+extern crate futures;
+extern crate rand;
 
 pub mod models;
 pub mod schema;

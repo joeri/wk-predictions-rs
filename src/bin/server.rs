@@ -64,6 +64,9 @@ fn main() {
                 r.get().with3(match_predictions::edit);
                 r.post().with3(match_predictions::update);
             })
+            .resource("/match/{id}/prediction/lucky", |r| {
+                r.post().with2(match_predictions::lucky);
+            })
             .resource("/favourites", |r| {
                 r.get().with2(favourites::edit);
                 r.post().with3(favourites::update);
@@ -71,6 +74,9 @@ fn main() {
             .resource("/predictions", |r| {
                 r.get().with2(match_predictions::bulk_edit);
                 r.post().with3(match_predictions::bulk_update);
+            })
+            .resource("/predictions/lucky", |r| {
+                r.post().with2(match_predictions::very_lucky);
             })
     }).bind(&url)
         .unwrap()

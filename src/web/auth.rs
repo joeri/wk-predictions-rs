@@ -229,7 +229,7 @@ pub fn perform_registration(
         .send(inner_form.clone())
         .from_err()
         .and_then(move |res| match res {
-            Ok(user) => Ok(HttpResponse::SeeOther()
+            Ok(_user) => Ok(HttpResponse::SeeOther()
                 .header("Location", "/login")
                 .finish()),
             Err(DatabaseError(DatabaseErrorKind::UniqueViolation, _)) => {

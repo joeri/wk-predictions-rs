@@ -141,6 +141,8 @@ pub struct MatchPrediction {
     pub time_of_first_goal: i16,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+
+    pub source: String,
 }
 
 #[derive(Debug, Insertable, AsChangeset)]
@@ -153,6 +155,20 @@ pub struct UpdatedPrediction {
     pub away_score: i16,
 
     pub time_of_first_goal: i16,
+}
+
+#[derive(Debug, Insertable, AsChangeset)]
+#[table_name = "match_predictions"]
+pub struct PredictionWithSource {
+    pub match_id: i32,
+    pub user_id: i32,
+
+    pub home_score: i16,
+    pub away_score: i16,
+
+    pub time_of_first_goal: i16,
+
+    pub source: String,
 }
 
 #[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
@@ -198,6 +214,7 @@ pub struct Favourite {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub phase: i16,
+    pub source: String,
 }
 
 #[derive(Insertable, AsChangeset)]

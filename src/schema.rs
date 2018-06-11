@@ -21,6 +21,7 @@ table! {
         created_at -> Timestamp,
         updated_at -> Timestamp,
         phase -> Int2,
+        source -> Varchar,
     }
 }
 
@@ -91,6 +92,7 @@ table! {
         time_of_first_goal -> Int2,
         created_at -> Timestamp,
         updated_at -> Timestamp,
+        source -> Varchar,
     }
 }
 

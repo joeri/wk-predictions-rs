@@ -201,6 +201,7 @@ fn fetch_favourites(
                     created_at: Utc::now().naive_local(), // Doesn't matter too much if this is the right method (as opposed to naive_utc)
                     updated_at: Utc::now().naive_local(),
                     phase: 0,
+                    source: "manual".to_string(),
                 },
                 None,
             ));

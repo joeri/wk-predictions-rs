@@ -1,4 +1,5 @@
-use models::{Location, Match, MatchOutcome, MatchPrediction, MatchWithAllInfo, UpdatedPrediction};
+use models::{Location, Match, MatchOutcome, MatchPrediction, MatchWithAllInfo,
+             PredictionWithSource, UpdatedPrediction};
 use templates::{Context, TEMPLATE_SERVICE};
 use web::app_state::DbExecutor;
 use web::{app_state::AppState, auth::CurrentUser};
@@ -7,9 +8,10 @@ use actix::prelude::*;
 use actix_web::{self, dev::AsyncResult, error::ResponseError, AsyncResponder, Form, FromRequest,
                 FutureResponse, HttpRequest, HttpResponse, Path, Responder};
 use chrono::Utc;
-use diesel::prelude::*;
+use diesel::{self, prelude::*};
 use failure;
 use futures::Future;
+use rand::{distributions::Uniform, prelude::*};
 use std::{error::Error as StdError, fmt};
 
 struct FetchPredictionInfo {
@@ -441,6 +443,198 @@ pub fn bulk_update(
             match_predictions: form,
         })
         .from_err()
+        .and_then(|result| match result {
+            Ok(_) => Ok(HttpResponse::SeeOther().header("Location", "/").finish()),
+            Err(error) => {
+                println!("{:?}", error);
+                Ok(HttpResponse::InternalServerError()
+                    .content_type("text/html")
+                    .body("Something went wrong"))
+            }
+        })
+        .responder()
+}
+
+struct UpdateVeryLucky {
+    user_id: i32,
+}
+
+impl Message for UpdateVeryLucky {
+    type Result = Result<(), failure::Error>;
+}
+const GOAL_POSSIBILITIES: [i16; 25] = [
+    0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 6, 7,
+];
+
+impl Handler<UpdateVeryLucky> for DbExecutor {
+    type Result = Result<(), failure::Error>;
+
+    fn handle(&mut self, msg: UpdateVeryLucky, _: &mut Self::Context) -> Self::Result {
+        // For each match the user didn't predict him/herself and that hasn't happened yet
+        fn generate_random_score<T: Rng>(
+            rng: &mut T,
+            user_id: i32,
+            match_id: i32,
+        ) -> PredictionWithSource {
+            let home_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
+            let away_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
+            let time_of_first_goal = if home_score > 0 || away_score > 0 {
+                rng.sample(Uniform::from(0..90))
+            } else {
+                0
+            };
+
+            PredictionWithSource {
+                user_id,
+                match_id,
+
+                home_score,
+                away_score,
+                time_of_first_goal,
+
+                source: "lucky".to_string(),
+            }
+        }
+
+        let mut rng = thread_rng();
+        let to_be_updated = {
+            use schema::match_predictions::dsl::*;
+            use schema::matches;
+
+            matches::table
+                .left_join(
+                match_predictions
+                    .on((matches::columns::match_id.eq(match_id)).and(user_id.eq(msg.user_id))),
+            )
+            .filter(matches::columns::time.ge(Utc::now()))
+            .filter(source.is_null().or(source.eq("lucky"))) // Only when there is no prediction, or it was made through I feel lucky
+            .select((matches::columns::match_id,))
+            .load::<(i32,)>(&self.connection)?
+        };
+
+        let values = to_be_updated
+            .iter()
+            .map(|(m,)| generate_random_score(&mut rng, msg.user_id, *m))
+            .collect::<Vec<_>>();
+
+        {
+            use diesel::pg::upsert::excluded;
+            use schema::match_predictions::dsl::*;
+
+            diesel::insert_into(match_predictions)
+                .values(&values)
+                .on_conflict((match_id, user_id))
+                .do_update()
+                .set((
+                    home_score.eq(excluded(home_score)),
+                    away_score.eq(excluded(away_score)),
+                    time_of_first_goal.eq(excluded(time_of_first_goal)),
+                ))
+                .execute(&self.connection)?;
+        }
+
+        Ok(())
+    }
+}
+
+pub fn very_lucky(auth: CurrentUser, req: HttpRequest<AppState>) -> impl Responder {
+    req.state()
+        .db
+        .send(UpdateVeryLucky {
+            user_id: auth.current_user.user_id,
+        })
+        .and_then(|result| match result {
+            Ok(_) => Ok(HttpResponse::SeeOther().header("Location", "/").finish()),
+            Err(error) => {
+                println!("{:?}", error);
+                Ok(HttpResponse::InternalServerError()
+                    .content_type("text/html")
+                    .body("Something went wrong"))
+            }
+        })
+        .responder()
+}
+
+struct UpdateLucky {
+    user_id: i32,
+    match_id: i32,
+}
+
+impl Message for UpdateLucky {
+    type Result = Result<(), failure::Error>;
+}
+impl Handler<UpdateLucky> for DbExecutor {
+    type Result = Result<(), failure::Error>;
+
+    fn handle(&mut self, msg: UpdateLucky, _: &mut Self::Context) -> Self::Result {
+        // For each match the user didn't predict him/herself and that hasn't happened yet
+        fn generate_random_score<T: Rng>(
+            rng: &mut T,
+            user_id: i32,
+            match_id: i32,
+        ) -> PredictionWithSource {
+            let home_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
+            let away_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
+            let time_of_first_goal = if home_score > 0 || away_score > 0 {
+                rng.sample(Uniform::from(0..90))
+            } else {
+                0
+            };
+
+            PredictionWithSource {
+                user_id,
+                match_id,
+
+                home_score,
+                away_score,
+                time_of_first_goal,
+
+                source: "lucky".to_string(),
+            }
+        }
+
+        let mut rng = thread_rng();
+        let values = generate_random_score(&mut rng, msg.user_id, msg.match_id);
+
+        let match_valid = {
+            use schema::matches::dsl::*;
+
+            matches
+                .filter(time.ge(Utc::now()))
+                .select((match_id,))
+                .first::<(i32,)>(&self.connection)?
+        };
+
+        {
+            use diesel::pg::upsert::excluded;
+            use schema::match_predictions::dsl::*;
+
+            diesel::insert_into(match_predictions)
+                .values(&values)
+                .on_conflict((match_id, user_id))
+                .do_update()
+                .set((
+                    home_score.eq(excluded(home_score)),
+                    away_score.eq(excluded(away_score)),
+                    time_of_first_goal.eq(excluded(time_of_first_goal)),
+                ))
+                .execute(&self.connection)?;
+        }
+
+        Ok(())
+    }
+}
+
+pub fn lucky(
+    (auth, path): (CurrentUser, Path<(i32,)>),
+    req: HttpRequest<AppState>,
+) -> impl Responder {
+    req.state()
+        .db
+        .send(UpdateLucky {
+            user_id: auth.current_user.user_id,
+            match_id: path.0,
+        })
         .and_then(|result| match result {
             Ok(_) => Ok(HttpResponse::SeeOther().header("Location", "/").finish()),
             Err(error) => {

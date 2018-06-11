@@ -14,7 +14,11 @@
         </div>
 
 
-        <input type=submit value="Predict">
+        <input type=submit value="Update">
+    </form>
+
+    <form action="/match/{{match.match_id}}/prediction/lucky" method=POST>
+        <input type=submit value="I'm feeling lucky">
     </form>
 </div>
 {% endblock content %}

@@ -83,7 +83,7 @@ body {
 /* Bulk prediction page needs tweaking */
 #bulk-prediction .row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 20px;
   padding-top: 4px;
   padding-bottom: 4px;
 }
@@ -92,6 +92,14 @@ body {
   background: aliceblue;
 }
 
-.country-flag {
+.country-flag, .prediction-source {
   font-family: apple color emoji,segoe ui emoji,notocoloremoji,segoe ui symbol,android emoji,emojisymbols,emojione mozilla;
 }
+.prediction-source.lucky::before {
+  content: "🎲";
+}
+/* Niet iedereen was fan
+.prediction-source.manual::before {
+  content: "👌";
+}
+*/
