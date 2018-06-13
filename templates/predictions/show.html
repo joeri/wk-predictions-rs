@@ -7,8 +7,8 @@
     <div>Match took place in {{location.stadium}}, {{location.city}} at <span class=time data-time="{{ match.time | date(format="%s") }}">{{ match.time | date(format="%a %B %d (%H:%M %Z)")  }}</span></div>
     <h2>Prediction</h2>
     {% if prediction %}
-        <div>Score {{ match.home_country_name }} {{ prediction.home_score }} - {{ prediction.away_score }} {{ match.away_country_name }}.</div>
-        <div>Time of first goal {{ prediction.time_of_first_goal }}</div>
+        <div>Predicted Score{% if prediction.source != "manual" %}<span class="prediction-source {{prediction.source}}"></span>{% endif %}: {{ match.home_country_name }} {{ prediction.home_score }} - {{ prediction.away_score }} {{ match.away_country_name }}.</div>
+        <div>Time of first goal: {{ prediction.time_of_first_goal }}</div>
     {% else %}
         <div>You didn't make a prediction for this match</div>
     {% endif %}
