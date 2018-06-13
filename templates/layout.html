@@ -22,7 +22,13 @@
     <div id="content">{% block content %}{% endblock content %}</div>
     <div id="footer">
         {% block footer %}
-        &copy; Copyright 2018 by Joeri Samson
+        <div>Discuss on #pronostiek in the XAOP slack</div>
+        <div class=copyright>&copy; Copyright 2018 by Joeri Samson</div>
+
+        <div class=right-column>
+            <div class=source-code>View code <a href="https://github.com/joeri/wk-predictions-rs">on Github</a></div>
+            <div><a href="/rules">Rules</a></div>
+        </div>
         {% endblock footer %}
     </div>
 </body>

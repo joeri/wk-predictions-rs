@@ -1,3 +1,13 @@
+/* Always use border-box unless otherwise specified */
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+/* Custom CSS */
+
 body {
   display: grid;
   grid-template-rows: 60px auto 40px;
@@ -64,9 +74,15 @@ body {
 
 #footer {
   grid-row: 3;
-  text-align: center;
+  margin: 8px;
+  margin-top: 0;
 
-  margin-bottom: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+#footer .right-column {
+  text-align: right;
 }
 
 #dashboard {

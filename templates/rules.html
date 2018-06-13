@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block title %}Rules {% endblock title %}
+
+{% block content %}
+<h1>Rules</h1>
+<h2>Match Predictions</h2>
+<p>A match prediction can be made until the start of the game (according to the time schedule of FIFA).
+<p>If you haven't given a prediction by the time the match officially starts you will not get any points for that match, except the points given for how well your favourite countries do.
+
+<h3>Points</h3>
+<p>You get 2 points for the right winner (or if you correctly predict a tie).
+<p>You get 1 point if you have the score line correct for a team.
+<p>You get 3 points if you have the score line correct for both teams.
+<p>So if you have the exact score you get 7 points.
+
+<h4>Group round</h4>
+In the group round the score is always evaluated after 90 minutes
+
+<h4>Playoff rounds</h4>
+<p>The evaluation of the score line applies to the game after 90 or 120 minutes.
+<p>If you didn't predict a tie and the game goes to penalties anyway you get an additional point if your predicted winner does win the match in the end.
+
+<h4>Time of first goal</h4>
+<p>If you predicted the right winner then you get bonus points if you correctly predicted the minute the first goal was scored.
+<p>In case of a 0-0 outcome the time of first goal is the 0th minute.
+<p>When you get the time exactly right you get 5 extra points, if you're off by 1 minute you get one less bonus point until at 5 minutes off you receive no points.
+<p>Injury time goals are counted as being scored in the minute they've been added to (e.g. 45+3' will be counted as a goal in the 45th minute).
+
+<h2>Favourite Countries</h2>
+<p>For the group round a player can select 4 favourite countries.
+<p>After the group round 3 new favourites can be chosen, which will be valid during the 8th and quarter finals.
+<p> Before the semi-finals the player can select one favourite country.
+<p> The favourite countries will only apply for the relevant rounds.
+<h3>Points</h3>
+<p> When a favourite country wins you get 3 points, for a tie you get 1 point, you get no points for a lost game.
+<p> You get one additional point per goal scored by your favourite teams.
+{% endblock content %}

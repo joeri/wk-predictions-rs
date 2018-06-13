@@ -7,7 +7,7 @@ extern crate futures;
 
 extern crate wk_predictions;
 use wk_predictions::web::{app_state, app_state::AppState, auth, dashboard, favourites,
-                          match_predictions};
+                          match_predictions, rules};
 
 use dotenv::dotenv;
 use std::env;
@@ -77,6 +77,9 @@ fn main() {
             })
             .resource("/predictions/lucky", |r| {
                 r.post().with2(match_predictions::very_lucky);
+            })
+            .resource("/rules", |r| {
+                r.get().f(|_req| rules::show());
             })
     }).bind(&url)
         .unwrap()
