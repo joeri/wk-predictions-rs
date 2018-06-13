@@ -1,4 +1,4 @@
-use models::{Country, Favourite, MatchOutcome, MatchPrediction, MatchWithAllInfo, User};
+use models::{Country, Favourite, Group, MatchOutcome, MatchPrediction, MatchWithAllInfo, User};
 use templates::{Context, TEMPLATE_SERVICE};
 use web::app_state::{AppState, DbExecutor};
 
@@ -21,7 +21,7 @@ struct DashboardData {
         Option<MatchOutcome>,
         Option<MatchPrediction>,
     )>,
-    favourites: Vec<(Favourite, Option<Country>)>,
+    favourites: Vec<(Favourite, Option<Country>, Option<Group>)>,
 }
 
 struct FetchDataForDashboard {
@@ -179,15 +179,22 @@ fn fetch_previous(
 fn fetch_favourites(
     db: &DbExecutor,
     current_user_id: i32,
-) -> Result<Vec<(Favourite, Option<Country>)>, failure::Error> {
+) -> Result<Vec<(Favourite, Option<Country>, Option<Group>)>, failure::Error> {
     let mut current_selection = {
-        use schema::countries;
         use schema::favourites::dsl::*;
+        use schema::{countries, group_memberships, groups};
 
         favourites
             .filter(user_id.eq(current_user_id))
+            .left_join(
+                countries::table.left_join(group_memberships::table.left_join(groups::table)),
+            )
+            .select((
+                favourites::all_columns(),
+                countries::all_columns.nullable(),
+                groups::all_columns.nullable(),
+            ))
             .order(choice)
-            .left_join(countries::table)
             .load(&db.connection)?
     };
 
@@ -203,6 +210,7 @@ fn fetch_favourites(
                     phase: 0,
                     source: "manual".to_string(),
                 },
+                None,
                 None,
             ));
         }

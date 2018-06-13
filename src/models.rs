@@ -67,7 +67,7 @@ pub struct Country {
     pub seeding_pot: String,
 }
 
-#[derive(Queryable, Identifiable, Debug)]
+#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
 #[primary_key(group_id)]
 #[table_name = "groups"]
 pub struct Group {

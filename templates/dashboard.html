@@ -37,7 +37,7 @@
         Favourites during the group round (you can choose new favourites once the group phase is over).
         <ul>
         {% for favourite in favourites %}
-        <li>{% if favourite.1 %}{{ favourite.1.name }}<span class="country-flag">{{ favourite.1.flag}}</span>
+        <li>{% if favourite.1 %}{{ favourite.1.name }}<span class="country-flag">{{ favourite.1.flag}}</span> (Group {{ favourite.2.name }})
             {% else %}You haven&apos;t selected a favourite country yet
             {% endif %}</li>
         {% endfor %}
