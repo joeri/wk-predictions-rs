@@ -174,9 +174,19 @@ pub fn perform_login(
                 // TODO: check whether user was redirected to login, and redirect there instead
                 Ok(HttpResponse::SeeOther().header("Location", "/").finish())
             }
-            Err(_) => Ok(HttpResponse::InternalServerError()
-                .content_type("text/plain; charset=utf-8")
-                .body("An unexpected error occurred")),
+            Err(err) => {
+                if err.downcast_ref::<Unauthenticated>().is_some()
+                    || err.downcast_ref::<UserNotFoundError>().is_some()
+                {
+                    Ok(HttpResponse::SeeOther()
+                        .header("Location", "/login")
+                        .finish())
+                } else {
+                    Ok(HttpResponse::InternalServerError()
+                        .content_type("text/plain; charset=utf-8")
+                        .body("An unexpected error occurred"))
+                }
+            }
         })
         .responder()
 }
