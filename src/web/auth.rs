@@ -147,10 +147,13 @@ impl Handler<LoginForm> for DbExecutor {
 
         match user {
             Some(u) => {
-                verify(&form.password, &u.encrypted_password)?;
-                Ok(u.user_id)
+                if verify(&form.password, &u.encrypted_password)? {
+                    Ok(u.user_id)
+                } else {
+                    Err(Unauthenticated.into())
+                }
             }
-            None => Err(UserNotFoundError)?,
+            None => Err(UserNotFoundError.into()),
         }
     }
 }
