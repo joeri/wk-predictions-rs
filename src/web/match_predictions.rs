@@ -1,5 +1,5 @@
 use models::{Location, Match, MatchOutcome, MatchPrediction, MatchWithAllInfo,
-             PredictionWithSource, UpdatedPrediction};
+             PredictionWithSource, UpdatedPrediction, User};
 use templates::{Context, TEMPLATE_SERVICE};
 use web::app_state::DbExecutor;
 use web::{app_state::AppState, auth::CurrentUser};
@@ -25,6 +25,7 @@ struct PredictionInfo {
     location: Location,
     prediction: Option<MatchPrediction>,
     outcome: Option<MatchOutcome>,
+    other_predictions: Vec<(MatchPrediction, User)>,
 }
 
 impl PredictionInfo {
@@ -67,11 +68,42 @@ impl Handler<FetchPredictionInfo> for DbExecutor {
                 .first(&self.connection)?
         };
 
+        let (outcome, other_predictions) = if match_info.time < Utc::now() {
+            let others = {
+                use schema::match_predictions::dsl::*;
+                use schema::users;
+
+                let query = match_predictions
+                    .filter(user_id.ne(msg.user_id))
+                    .filter(match_id.eq(match_info.match_id))
+                    .inner_join(users::table.on(users::columns::user_id.eq(user_id)));
+
+                println!(
+                    "{}",
+                    diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
+                );
+                query.load(&self.connection)?
+            };
+            let outcome = {
+                use schema::match_outcomes::dsl::*;
+
+                match_outcomes
+                    .filter(match_id.eq(msg.match_id))
+                    .select((match_id, home_score, away_score, time_of_first_goal))
+                    .first(&self.connection)
+                    .optional()?
+            };
+            (outcome, others)
+        } else {
+            (None, Vec::new())
+        };
+
         Ok(PredictionInfo {
             match_with_info: match_info,
             prediction,
             location,
-            outcome: None,
+            outcome,
+            other_predictions,
         })
     }
 }
@@ -101,6 +133,7 @@ pub fn edit(
                         TEMPLATE_SERVICE.render("predictions/edit.html", &context)
                     } else {
                         context.add("outcome", &info.outcome);
+                        context.add("other_predictions", &info.other_predictions);
                         TEMPLATE_SERVICE.render("predictions/show.html", &context)
                     };
 

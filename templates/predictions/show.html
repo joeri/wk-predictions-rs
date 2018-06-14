@@ -19,6 +19,11 @@
     {% else %}
         <div>Outcome has not yet been entered in the system.</div>
     {% endif %}
+    <h3>Other Peoples Prediction</h3>
+    {{ other_predictions | length }}
+    {% for other in other_predictions %}
+    <div>{{ other.1.display_name }} predicted {{ other.0.home_score }} - {{ other.0.away_score }} (time of first goal {{ other.0.time_of_first_goal }})</div>
+    {% endfor %}
 </div>
 {% endblock content %}
 
