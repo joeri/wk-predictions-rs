@@ -78,10 +78,10 @@ impl Handler<FetchPredictionInfo> for DbExecutor {
                     .filter(match_id.eq(match_info.match_id))
                     .inner_join(users::table.on(users::columns::user_id.eq(user_id)));
 
-                println!(
+                /* println!(
                     "{}",
                     diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
-                );
+                ); */
                 query.load(&self.connection)?
             };
             let outcome = {
