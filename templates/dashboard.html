@@ -21,6 +21,8 @@
         <li><span class=time data-time="{{ match.0.time | date(format="%s") }}">{{match.0.time | date(format="%a %B %d (%H:%M %Z)") }}</span> {{ match.0.home_country_name }}<span class=country-flag>{{ match.0.home_country_flag }}</span> - {{ match.0.away_country_name }}<span class=country-flag>{{ match.0.away_country_flag }}</span> <a href=/match/{{ match.0.match_id }}/prediction>{% if match.2 %}you predicted {{ match.2.home_score }} - {{ match.2.away_score }}{% else %}you made no prediction{% endif %}</a>, actual result {% if match.1 %}{{ match.1.home_score }} - {{ match.1.away_score }}{% else %}not yet known{% endif %} </li>
         {% endfor %}
         </ol>
+
+        <a href="/matches">All previous matches</a>
     </div>
 
     <div id="ranking">

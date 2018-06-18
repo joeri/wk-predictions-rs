@@ -75,6 +75,9 @@ fn main() {
                 r.get().with2(match_predictions::bulk_edit);
                 r.post().with3(match_predictions::bulk_update);
             })
+            .resource("/matches", |r| {
+                r.get().with(match_predictions::index); // Perhaps not the right module to place this in
+            })
             .resource("/predictions/lucky", |r| {
                 r.post().with2(match_predictions::very_lucky);
             })

@@ -679,3 +679,127 @@ pub fn lucky(
         })
         .responder()
 }
+
+struct FetchAllPredictionInfo {
+    user_id: i32,
+}
+
+impl Message for FetchAllPredictionInfo {
+    type Result = Result<
+        Vec<(
+            MatchWithAllInfo,
+            Option<MatchOutcome>,
+            Option<MatchPrediction>,
+        )>,
+        failure::Error,
+    >;
+}
+
+impl Handler<FetchAllPredictionInfo> for DbExecutor {
+    type Result = Result<
+        Vec<(
+            MatchWithAllInfo,
+            Option<MatchOutcome>,
+            Option<MatchPrediction>,
+        )>,
+        failure::Error,
+    >;
+
+    fn handle(&mut self, msg: FetchAllPredictionInfo, _ctx: &mut Self::Context) -> Self::Result {
+        // TODO: DRY up this logic
+        let match_infos = {
+            use schema::full_match_infos::dsl::*;
+
+            full_match_infos
+                .filter(time.gt(Utc::now()))
+                .order(time.asc())
+                .load::<MatchWithAllInfo>(&self.connection)?
+        };
+
+        use std::collections::HashMap;
+
+        let match_ids = match_infos
+            .iter()
+            .map(|match_info: &MatchWithAllInfo| match_info.match_id)
+            .collect::<Vec<_>>();
+
+        let id_indices: HashMap<_, _> = match_infos
+            .iter()
+            .enumerate()
+            .map(|(i, u)| (u.match_id, i))
+            .collect();
+
+        let predictions_grouped_by_match_infos = {
+            use schema::match_predictions::dsl::*;
+            let predictions = match_predictions
+                .filter(user_id.eq(msg.user_id))
+                .filter(match_id.eq_any(&match_ids))
+                .get_results::<MatchPrediction>(&self.connection)?;
+
+            let mut result = match_infos.iter().map(|_| None).collect::<Vec<_>>();
+            for child in predictions {
+                let index = id_indices[&child.match_id];
+                result[index] = Some(child);
+            }
+
+            result
+        };
+
+        let results_grouped_by_match_infos = {
+            use schema::match_outcomes::dsl::*;
+
+            let outcomes = match_outcomes
+                .filter(match_id.eq_any(&match_ids))
+                .select((match_id, home_score, away_score, time_of_first_goal))
+                .load::<MatchOutcome>(&self.connection)?;
+
+            let mut result = match_infos.iter().map(|_| None).collect::<Vec<_>>();
+            for child in outcomes {
+                let index = id_indices[&child.match_id];
+                result[index] = Some(child);
+            }
+
+            result
+        };
+
+        Ok(match_infos
+            .into_iter()
+            .zip(results_grouped_by_match_infos)
+            .zip(predictions_grouped_by_match_infos)
+            .map(|((a, b), c)| (a, b, c))
+            .collect())
+    }
+}
+
+pub fn index((auth, req): (CurrentUser, HttpRequest<AppState>)) -> impl Responder {
+    req.state()
+        .db
+        .send(FetchAllPredictionInfo {
+            user_id: auth.current_user.user_id,
+        })
+        .and_then(move |results| match results {
+            Ok(all_predictions) => {
+                let mut context = Context::new();
+                context.add("current_user", &auth.current_user);
+                context.add("finished", &all_predictions);
+                let rendered = TEMPLATE_SERVICE.render("predictions/index.html", &context);
+
+                match rendered {
+                    Ok(body) => Ok(HttpResponse::Ok().content_type("text/html").body(body)),
+                    Err(error) => {
+                        println!("{:?}", error);
+                        Ok(HttpResponse::InternalServerError()
+                            .content_type("text/html")
+                            .body("Something went wrong"))
+                    }
+                }
+            }
+            Err(error) => {
+                println!("{:?}", error);
+                Ok(HttpResponse::InternalServerError()
+                    .content_type("text/html")
+                    .body("Something went wrong"))
+            }
+        })
+        .responder()
+}

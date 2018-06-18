@@ -127,7 +127,7 @@ impl Handler<UpdatedFavouriteInfo> for DbExecutor {
         self.connection
             .transaction::<_, diesel::result::Error, _>(|| {
                 let mut changes = Vec::new();
-                for (&country_id, choice_idx) in data.iter().zip((1..=4).into_iter()).into_iter() {
+                for (&country_id, choice_idx) in data.iter().zip((1..=4).into_iter()) {
                     changes.push(UpdatedFavourite {
                         user_id: msg.user_id,
                         country_id: if country_id == 0 {
