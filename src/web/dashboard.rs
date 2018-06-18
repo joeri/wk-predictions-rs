@@ -54,49 +54,23 @@ fn fetch_upcoming(
     current_user_id: i32,
     amount: i64,
 ) -> Result<Vec<(MatchWithAllInfo, Option<MatchPrediction>)>, failure::Error> {
-    let match_infos = {
-        use schema::full_match_infos::dsl::*;
+    use schema::full_match_infos::dsl::*;
+    use schema::match_predictions;
 
-        full_match_infos
-            .filter(time.gt(Utc::now()))
-            .order(time.asc())
-            .limit(amount)
-            .load::<MatchWithAllInfo>(&db.connection)?
-    };
-
-    use std::collections::HashMap;
-
-    let match_ids = match_infos
-        .iter()
-        .map(|match_info: &MatchWithAllInfo| match_info.match_id)
-        .collect::<Vec<_>>();
-
-    let id_indices: HashMap<_, _> = match_infos
-        .iter()
-        .enumerate()
-        .map(|(i, u)| (u.match_id, i))
-        .collect();
-
-    let predictions_grouped_by_match_infos = {
-        use schema::match_predictions::dsl::*;
-        let predictions = match_predictions
-            .filter(user_id.eq(current_user_id))
-            .filter(match_id.eq_any(&match_ids))
-            .get_results::<MatchPrediction>(&db.connection)?;
-
-        let mut result = match_infos.iter().map(|_| None).collect::<Vec<_>>();
-        for child in predictions {
-            let index = id_indices[&child.match_id];
-            result[index] = Some(child);
-        }
-
-        result
-    };
-
-    Ok(match_infos
-        .into_iter()
-        .zip(predictions_grouped_by_match_infos)
-        .collect())
+    Ok(full_match_infos
+        .filter(time.gt(Utc::now()))
+        .left_join(
+            match_predictions::table.on(match_predictions::columns::match_id
+                .eq(match_id)
+                .and(match_predictions::columns::user_id.eq(current_user_id))),
+        )
+        .select((
+            full_match_infos::all_columns(),
+            match_predictions::all_columns.nullable(),
+        ))
+        .limit(amount)
+        .order((time.asc(), match_id.asc()))
+        .load(&db.connection)?)
 }
 
 fn fetch_previous(
@@ -111,69 +85,31 @@ fn fetch_previous(
     )>,
     failure::Error,
 > {
-    use std::collections::HashMap;
+    use schema::full_match_infos::dsl::*;
+    use schema::match_outcomes;
+    use schema::match_predictions;
 
-    let match_infos = {
-        use schema::full_match_infos::dsl::*;
-
-        full_match_infos
-            .filter(time.le(Utc::now()))
-            .order(time.desc())
-            .limit(amount)
-            .load::<MatchWithAllInfo>(&db.connection)?
-    };
-
-    let match_ids = match_infos
-        .iter()
-        .map(|match_info: &MatchWithAllInfo| match_info.match_id)
-        .collect::<Vec<_>>();
-
-    let id_indices: HashMap<_, _> = match_infos
-        .iter()
-        .enumerate()
-        .map(|(i, u)| (u.match_id, i))
-        .collect();
-
-    let predictions_grouped_by_match_infos = {
-        use schema::match_predictions::dsl::*;
-
-        let predictions = match_predictions
-            .filter(user_id.eq(current_user_id))
-            .filter(match_id.eq_any(&match_ids))
-            .load::<MatchPrediction>(&db.connection)?;
-
-        let mut result = match_infos.iter().map(|_| None).collect::<Vec<_>>();
-        for child in predictions {
-            let index = id_indices[&child.match_id];
-            result[index] = Some(child);
-        }
-
-        result
-    };
-
-    let results_grouped_by_match_infos = {
-        use schema::match_outcomes::dsl::*;
-
-        let outcomes = match_outcomes
-            .filter(match_id.eq_any(&match_ids))
-            .select((match_id, home_score, away_score, time_of_first_goal))
-            .load::<MatchOutcome>(&db.connection)?;
-
-        let mut result = match_infos.iter().map(|_| None).collect::<Vec<_>>();
-        for child in outcomes {
-            let index = id_indices[&child.match_id];
-            result[index] = Some(child);
-        }
-
-        result
-    };
-
-    Ok(match_infos
-        .into_iter()
-        .zip(results_grouped_by_match_infos)
-        .zip(predictions_grouped_by_match_infos)
-        .map(|((a, b), c)| (a, b, c))
-        .collect())
+    Ok(full_match_infos
+        .filter(time.le(Utc::now()))
+        .left_join(match_outcomes::table.on(match_outcomes::columns::match_id.eq(match_id)))
+        .left_join(
+            match_predictions::table.on(match_predictions::columns::match_id
+                .eq(match_id)
+                .and(match_predictions::columns::user_id.eq(current_user_id))),
+        )
+        .select((
+            full_match_infos::all_columns(),
+            (
+                match_outcomes::columns::match_id,
+                match_outcomes::columns::home_score,
+                match_outcomes::columns::away_score,
+                match_outcomes::columns::time_of_first_goal,
+            ).nullable(),
+            match_predictions::all_columns.nullable(),
+        ))
+        .limit(amount)
+        .order((time.desc(), match_id.desc()))
+        .load(&db.connection)?)
 }
 
 fn fetch_favourites(
