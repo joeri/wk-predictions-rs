@@ -158,6 +158,7 @@ impl Handler<LoginForm> for DbExecutor {
     }
 }
 
+#[allow(needless_pass_by_value)]
 pub fn perform_login(
     form: Form<LoginForm>,
     state: State<AppState>,
@@ -230,6 +231,7 @@ impl Handler<RegistrationForm> for DbExecutor {
     }
 }
 
+#[allow(needless_pass_by_value)]
 pub fn perform_registration(
     form: Form<RegistrationForm>,
     state: State<AppState>,
@@ -257,6 +259,7 @@ pub fn perform_registration(
         .responder()
 }
 
+#[allow(needless_pass_by_value)]
 pub fn perform_logout(current_user: CurrentUser, mut req: HttpRequest<AppState>) -> HttpResponse {
     req.forget();
 

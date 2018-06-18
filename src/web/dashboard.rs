@@ -239,6 +239,7 @@ impl Handler<FetchDataForDashboard> for DbExecutor {
     }
 }
 
+#[allow(needless_pass_by_value)]
 pub fn index(
     request: HttpRequest<AppState>,
     state: State<AppState>,

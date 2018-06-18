@@ -67,7 +67,7 @@ impl Handler<FetchFavouriteInfo> for DbExecutor {
     }
 }
 
-fn render_favourite_selection(auth: CurrentUser, fav_info: FavouriteInfo) -> HttpResponse {
+fn render_favourite_selection(auth: &CurrentUser, fav_info: &FavouriteInfo) -> HttpResponse {
     let mut context = Context::new();
     context.add("current_user", &auth.current_user);
     context.add("current_selection", &fav_info.current_selection);
@@ -86,14 +86,15 @@ fn render_favourite_selection(auth: CurrentUser, fav_info: FavouriteInfo) -> Htt
     }
 }
 
+#[allow(needless_pass_by_value)]
 pub fn edit(auth: CurrentUser, req: HttpRequest<AppState>) -> impl Responder {
     req.state()
         .db
         .send(FetchFavouriteInfo {
             user_id: auth.current_user.user_id,
         })
-        .and_then(|fav_info| match fav_info {
-            Ok(info) => Ok(render_favourite_selection(auth, info)),
+        .and_then(move |fav_info| match fav_info {
+            Ok(info) => Ok(render_favourite_selection(&auth, &info)),
             Err(err) => {
                 println!("{:?}", err);
                 Ok(HttpResponse::InternalServerError()
@@ -173,6 +174,7 @@ pub struct FavouriteSelectionForm {
     fav_4: i32,
 }
 
+#[allow(needless_pass_by_value)]
 pub fn update(
     auth: CurrentUser,
     form: Form<FavouriteSelectionForm>,

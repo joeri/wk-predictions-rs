@@ -108,6 +108,7 @@ impl Handler<FetchPredictionInfo> for DbExecutor {
     }
 }
 
+#[allow(needless_pass_by_value)]
 pub fn edit(
     auth: CurrentUser,
     path: Path<(i32,)>,
@@ -226,6 +227,7 @@ impl Handler<UpdatePredictionInfo> for DbExecutor {
     }
 }
 
+#[allow(needless_pass_by_value)]
 pub fn update(
     auth: CurrentUser,
     path_and_form: (Path<(i32,)>, Form<PredictionForm>),
@@ -281,6 +283,7 @@ impl Handler<FetchBulkPredictionInfo> for DbExecutor {
     }
 }
 
+#[allow(needless_pass_by_value)]
 pub fn bulk_edit(auth: CurrentUser, req: HttpRequest<AppState>) -> impl Responder {
     req.state()
         .db
@@ -342,7 +345,7 @@ impl Handler<BulkUpdatePredictions> for DbExecutor {
         // Update all predictions, or predict none
         self.connection
             .transaction::<_, diesel::result::Error, _>(|| {
-                for prediction in msg.match_predictions.iter() {
+                for prediction in &msg.match_predictions {
                     let full_prediction = UpdatedPrediction {
                         user_id: msg.user_id,
                         match_id: prediction.match_id,
@@ -437,7 +440,7 @@ impl FromRequest<AppState> for Vec<MatchPredictionItem> {
 
             if tuples.len() % 4 == 0 {
                 let mut current = (None, None, None, None);
-                for (key, val) in tuples.iter() {
+                for (key, val) in &tuples {
                     match key.as_str() {
                         "match_id" => current.0 = Some(val.clone()),
                         "home_score" => current.1 = Some(val.clone()),
@@ -464,6 +467,7 @@ impl FromRequest<AppState> for Vec<MatchPredictionItem> {
     }
 }
 
+#[allow(needless_pass_by_value)]
 pub fn bulk_update(
     auth: CurrentUser,
     form: Vec<MatchPredictionItem>,
@@ -570,6 +574,7 @@ impl Handler<UpdateVeryLucky> for DbExecutor {
     }
 }
 
+#[allow(needless_pass_by_value)]
 pub fn very_lucky(auth: CurrentUser, req: HttpRequest<AppState>) -> impl Responder {
     req.state()
         .db
@@ -658,6 +663,7 @@ impl Handler<UpdateLucky> for DbExecutor {
     }
 }
 
+#[allow(needless_pass_by_value)]
 pub fn lucky(
     (auth, path): (CurrentUser, Path<(i32,)>),
     req: HttpRequest<AppState>,
@@ -771,6 +777,7 @@ impl Handler<FetchAllPredictionInfo> for DbExecutor {
     }
 }
 
+#[allow(needless_pass_by_value)]
 pub fn index((auth, req): (CurrentUser, HttpRequest<AppState>)) -> impl Responder {
     req.state()
         .db
