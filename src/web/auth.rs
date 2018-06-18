@@ -258,7 +258,6 @@ pub fn perform_registration(
 }
 
 pub fn perform_logout(current_user: CurrentUser, mut req: HttpRequest<AppState>) -> HttpResponse {
-    print!("Logging out user {:?}", current_user.current_user);
     req.forget();
 
     HttpResponse::TemporaryRedirect()
