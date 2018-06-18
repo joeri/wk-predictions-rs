@@ -1,3 +1,5 @@
+#![allow(unknown_lints)]
+
 #[macro_use]
 extern crate diesel;
 #[macro_use]
@@ -19,5 +21,6 @@ extern crate rand;
 
 pub mod models;
 pub mod schema;
+pub mod scores;
 pub mod templates;
 pub mod web;
