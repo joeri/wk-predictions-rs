@@ -44,7 +44,7 @@ fn fetch_users(db: &DbExecutor, amount: i64) -> Result<Vec<User>, failure::Error
     use schema::users::dsl::*;
 
     Ok(users
-        .order(score.asc())
+        .order(score.desc())
         .limit(amount)
         .get_results(&db.connection)?)
 }
