@@ -137,7 +137,8 @@ pub struct MatchWithParticipants {
     pub time: DateTime<Utc>,
 }
 
-#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
+#[derive(Queryable, Identifiable, Associations, Debug, Serialize, Deserialize, Clone)]
+#[belongs_to(User)]
 #[primary_key(match_id, user_id)]
 pub struct MatchPrediction {
     pub match_id: i32,

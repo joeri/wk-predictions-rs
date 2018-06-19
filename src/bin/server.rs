@@ -91,6 +91,9 @@ fn main() {
                 r.get().with(admin::match_outcomes::edit);
                 r.post().with(admin::match_outcomes::update);
             })
+            .resource("/admin/scores", |r| {
+                r.post().with(admin::scores::recalculate);
+            })
     }).bind(&url)
         .unwrap()
         .start();
