@@ -1,5 +1,3 @@
-#![allow(unknown_lints)]
-
 #[macro_use]
 extern crate diesel;
 #[macro_use]

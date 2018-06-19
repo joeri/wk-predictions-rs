@@ -86,7 +86,7 @@ fn render_favourite_selection(auth: &CurrentUser, fav_info: &FavouriteInfo) -> H
     }
 }
 
-#[allow(needless_pass_by_value)]
+#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn edit(auth: CurrentUser, req: HttpRequest<AppState>) -> impl Responder {
     req.state()
         .db
@@ -174,7 +174,7 @@ pub struct FavouriteSelectionForm {
     fav_4: i32,
 }
 
-#[allow(needless_pass_by_value)]
+#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn update(
     auth: CurrentUser,
     form: Form<FavouriteSelectionForm>,

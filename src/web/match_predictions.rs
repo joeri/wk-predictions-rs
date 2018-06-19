@@ -108,7 +108,7 @@ impl Handler<FetchPredictionInfo> for DbExecutor {
     }
 }
 
-#[allow(needless_pass_by_value)]
+#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn edit(
     auth: CurrentUser,
     path: Path<(i32,)>,
@@ -227,7 +227,7 @@ impl Handler<UpdatePredictionInfo> for DbExecutor {
     }
 }
 
-#[allow(needless_pass_by_value)]
+#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn update(
     auth: CurrentUser,
     path_and_form: (Path<(i32,)>, Form<PredictionForm>),
@@ -283,7 +283,7 @@ impl Handler<FetchBulkPredictionInfo> for DbExecutor {
     }
 }
 
-#[allow(needless_pass_by_value)]
+#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn bulk_edit(auth: CurrentUser, req: HttpRequest<AppState>) -> impl Responder {
     req.state()
         .db
@@ -467,7 +467,7 @@ impl FromRequest<AppState> for Vec<MatchPredictionItem> {
     }
 }
 
-#[allow(needless_pass_by_value)]
+#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn bulk_update(
     auth: CurrentUser,
     form: Vec<MatchPredictionItem>,
@@ -574,7 +574,7 @@ impl Handler<UpdateVeryLucky> for DbExecutor {
     }
 }
 
-#[allow(needless_pass_by_value)]
+#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn very_lucky(auth: CurrentUser, req: HttpRequest<AppState>) -> impl Responder {
     req.state()
         .db
@@ -663,7 +663,7 @@ impl Handler<UpdateLucky> for DbExecutor {
     }
 }
 
-#[allow(needless_pass_by_value)]
+#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn lucky(
     (auth, path): (CurrentUser, Path<(i32,)>),
     req: HttpRequest<AppState>,
@@ -739,7 +739,7 @@ impl Handler<FetchAllPredictionInfo> for DbExecutor {
     }
 }
 
-#[allow(needless_pass_by_value)]
+#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn index((auth, req): (CurrentUser, HttpRequest<AppState>)) -> impl Responder {
     req.state()
         .db
