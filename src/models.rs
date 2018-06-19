@@ -3,7 +3,7 @@ use bcrypt::{hash, DEFAULT_COST};
 use chrono::prelude::*;
 use diesel::prelude::*;
 
-#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
+#[derive(Queryable, Identifiable, Clone, Debug, Serialize, Deserialize)]
 #[primary_key(user_id)]
 pub struct User {
     pub user_id: i32,
@@ -130,6 +130,13 @@ pub struct Match {
     pub time: DateTime<Utc>,
 }
 
+pub struct MatchWithParticipants {
+    pub match_id: i32,
+    pub home_participant: MatchParticipant,
+    pub away_participant: MatchParticipant,
+    pub time: DateTime<Utc>,
+}
+
 #[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
 #[primary_key(match_id, user_id)]
 pub struct MatchPrediction {
@@ -171,7 +178,7 @@ pub struct PredictionWithSource {
     pub source: String,
 }
 
-#[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
+#[derive(Queryable, Identifiable, Insertable, Debug, Serialize, Deserialize, AsChangeset, Clone)]
 #[primary_key(match_id)]
 pub struct MatchOutcome {
     pub match_id: i32,
@@ -206,7 +213,9 @@ pub struct MatchWithAllInfo {
     pub away_country_flag: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
+#[derive(Debug, Clone, Associations, Serialize, Deserialize, Queryable, Identifiable)]
+#[belongs_to(User)]
+#[primary_key(user_id, choice)]
 pub struct Favourite {
     pub user_id: i32,
     pub country_id: Option<i32>,
@@ -224,4 +233,15 @@ pub struct UpdatedFavourite {
     pub country_id: Option<i32>,
     pub choice: i16,
     pub phase: i16,
+}
+
+#[derive(Queryable, Insertable, AsChangeset)]
+#[table_name = "user_match_points"]
+pub struct UserMatchPoints {
+    pub user_id: i32,
+    pub match_id: i32,
+    pub favourites: i32,
+    pub prediction: i32,
+    pub time_of_first_goal: i32,
+    pub total: i32,
 }

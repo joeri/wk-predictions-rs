@@ -6,7 +6,7 @@ extern crate env_logger;
 extern crate futures;
 
 extern crate wk_predictions;
-use wk_predictions::web::{app_state, app_state::AppState, auth, dashboard, favourites,
+use wk_predictions::web::{admin, app_state, app_state::AppState, auth, dashboard, favourites,
                           match_predictions, rules};
 
 use dotenv::dotenv;
@@ -83,6 +83,13 @@ fn main() {
             })
             .resource("/rules", |r| {
                 r.get().f(|_req| rules::show());
+            })
+            .resource("/admin/matches", |r| {
+                r.get().with(admin::match_outcomes::index);
+            })
+            .resource("/admin/matches/{id}", |r| {
+                r.get().with(admin::match_outcomes::edit);
+                r.post().with(admin::match_outcomes::update);
             })
     }).bind(&url)
         .unwrap()

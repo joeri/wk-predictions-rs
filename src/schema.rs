@@ -119,6 +119,17 @@ table! {
 }
 
 table! {
+    user_match_points (user_id, match_id) {
+        user_id -> Int4,
+        match_id -> Int4,
+        favourites -> Int4,
+        prediction -> Int4,
+        time_of_first_goal -> Int4,
+        total -> Int4,
+    }
+}
+
+table! {
     users (user_id) {
         user_id -> Int4,
         display_name -> Nullable<Varchar>,
@@ -169,6 +180,8 @@ joinable!(match_predictions -> matches (match_id));
 joinable!(match_predictions -> users (user_id));
 joinable!(matches -> locations (location_id));
 joinable!(matches -> stages (stage_id));
+joinable!(user_match_points -> matches (match_id));
+joinable!(user_match_points -> users (user_id));
 
 allow_tables_to_appear_in_same_query!(
     countries,
@@ -183,5 +196,6 @@ allow_tables_to_appear_in_same_query!(
     match_predictions,
     matches,
     stages,
+    user_match_points,
     users,
 );

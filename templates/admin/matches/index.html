@@ -1,0 +1,8 @@
+{% extends "layout.html" %}
+{% block title %}Admin {% endblock title %}
+
+{% block content %}
+    {% for match in matches %}
+    <li><span class=time data-time="{{ match.0.time | date(format="%s") }}">{{match.0.time | date(format="%a %B %d (%H:%M %Z)") }}</span> {{ match.0.home_country_name }}<span class=country-flag>{{ match.0.home_country_flag }}</span> - {{ match.0.away_country_name }}<span class=country-flag>{{ match.0.away_country_flag }}</span>, actual result {% if match.1 %}{{ match.1.home_score }} - {{ match.1.away_score }} (<a href=/admin/matches/{{ match.0.match_id }}>update</a>){% else %}<a href="/admin/matches/{{ match.0.match_id }}">not yet known</a>{% endif %} </li>
+    {% endfor %}
+{% endblock content %}

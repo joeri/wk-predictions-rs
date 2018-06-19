@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block title %}Edit match outcome {% endblock title %}
+
+{% block content %}
+<div id=outcome>
+    <h1>{{ match.home_country_name }}<span class=country-flag>{{ match.home_country_flag }}</span> vs. {{ match.away_country_name }}<span class=country-flag>{{ match.away_country_flag }}</span> </h1>
+    <div>Match took place at <span class=time  data-time="{{ match.time | date(format="%s") }}">{{ match.time | date(format="%a %B %d (%H:%M %Z)") }}</span></div>
+    {% if outcome %}<div>Current outcome:<div>{% endif %}
+    <form action="/admin/matches/{{ match.match_id}}" method=POST>
+        <div>
+            <input type=hidden name=match_id value="{{ match.match_id }}" />
+            <label>{{ match.home_country_name }} <input type=text name=home_score {% if outcome %}value='{{ outcome.home_score }}'{% endif %}/></label> - <label><input type=text name=away_score {% if outcome %}value='{{ outcome.away_score }}'{% endif %} /> {{ match.away_country_name }}</label>
+        </div>
+        <div>
+            <label>Time of first goal <input type=text name=time_of_first_goal {% if outcome %}value='{{ outcome.time_of_first_goal }}'{% endif %} /></label>
+        </div>
+
+        <input type=submit value="Update">
+    </form>
+</div>
+{% endblock content %}
+
+
