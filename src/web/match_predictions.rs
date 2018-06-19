@@ -720,7 +720,9 @@ impl Handler<FetchAllPredictionInfo> for DbExecutor {
             .filter(time.le(Utc::now()))
             .left_join(match_outcomes::table.on(match_outcomes::columns::match_id.eq(match_id)))
             .left_join(
-                match_predictions::table.on(match_predictions::columns::match_id.eq(match_id)),
+                match_predictions::table.on(match_predictions::columns::match_id
+                    .eq(match_id)
+                    .and(match_predictions::columns::user_id.eq(msg.user_id))),
             )
             .select((
                 full_match_infos::all_columns(),
