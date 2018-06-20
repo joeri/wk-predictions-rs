@@ -167,7 +167,7 @@ impl Handler<FetchDataForDashboard> for DbExecutor {
 
         Ok(DashboardData {
             current_user: fetch_current_user(&self, msg.user_id)?,
-            leader_board: fetch_users(&self, 10)?,
+            leader_board: fetch_users(&self, 13)?,
             upcoming: fetch_upcoming(&self, msg.user_id, 10)?,
             finished: fetch_previous(&self, msg.user_id, 10)?,
             favourites: fetch_favourites(&self, msg.user_id)?,
