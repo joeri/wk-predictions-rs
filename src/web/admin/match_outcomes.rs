@@ -173,7 +173,7 @@ impl Handler<UpdateMatchOutcomeInfo> for DbExecutor {
         // UserMatchPoints, insert/replace on conflict
         // Sum the scores for all users at the end
         // commit
-        use diesel::{insert_into, sql_query, update};
+        use diesel::{insert_into, update};
 
         Ok(self.connection
             .transaction::<(), diesel::result::Error, _>(|| {
@@ -265,7 +265,6 @@ impl Handler<UpdateMatchOutcomeInfo> for DbExecutor {
 
                 {
                     use diesel::dsl::sql;
-                    use diesel::sql_types::Integer;
                     use schema::users::dsl::*;
 
                     update(users)
