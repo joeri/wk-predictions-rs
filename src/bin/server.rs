@@ -6,17 +6,21 @@ extern crate env_logger;
 extern crate futures;
 
 extern crate wk_predictions;
-use wk_predictions::web::{admin, app_state, app_state::AppState, auth, dashboard, favourites,
-                          match_predictions, rules};
+use wk_predictions::web::{
+    admin, app_state, app_state::AppState, auth, dashboard, favourites, match_predictions, rules,
+    scores,
+};
 
 use dotenv::dotenv;
 use std::env;
 
 use actix::prelude::*;
-use actix_web::{middleware::{identity::{CookieIdentityPolicy, IdentityService},
-                             Logger},
-                server,
-                App};
+use actix_web::{
+    middleware::{
+        identity::{CookieIdentityPolicy, IdentityService}, Logger,
+    }, server,
+    App,
+};
 
 fn main() {
     dotenv().ok();
@@ -77,6 +81,9 @@ fn main() {
             })
             .resource("/matches", |r| {
                 r.get().with(match_predictions::index); // Perhaps not the right module to place this in
+            })
+            .resource("/scores", |r| {
+                r.get().with(scores::index);
             })
             .resource("/predictions/lucky", |r| {
                 r.post().with2(match_predictions::very_lucky);

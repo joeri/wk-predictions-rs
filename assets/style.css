@@ -108,6 +108,17 @@ body {
   background: aliceblue;
 }
 
+#leaderboard .row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#leaderboard .row:nth-child(even) {
+  background: aliceblue;
+}
+
 .country-flag, .prediction-source {
   font-family: apple color emoji,segoe ui emoji,notocoloremoji,segoe ui symbol,android emoji,emojisymbols,emojione mozilla;
 }

@@ -5,3 +5,4 @@ pub mod dashboard;
 pub mod favourites;
 pub mod match_predictions;
 pub mod rules;
+pub mod scores;

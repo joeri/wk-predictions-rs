@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block title %}Leaderboard {% endblock title %}
+
+{% block content %}
+<h1>Scores{% if current %} Up To <span class=time data-time="{{ current | date(format="%s") }}">{{ current | date(format="%a %B %d (%H:%M %Z)") }}{% endif %}</a></h1>
+
+<div id=leaderboard>
+    <div class=row>
+        <div class=name>Name</div>
+        <div class=predictions>Predictions</div>
+        <div class=tofg>Time of first goal</div>
+        <div class=favourites>Favourites</div>
+        <div class=total>Total</div>
+    </div>
+    {% for user in leader_board %}
+    <div class=row>
+        <div class=name>{{ user.display_name }}</div>
+        <div class=predictions>{{ user.prediction }}</div>
+        <div class=tofg>{{ user.time_of_first_goal }}</div>
+        <div class=favourites>{{ user.favourites }}</div>
+        <div class=total>{{ user.score }}</div>
+    </div>
+    {% endfor %}
+
+    {% if previous %}
+    <a href=/scores?up_to={{ previous | date(format="%s") }}>Show Previous Leaderboard</a>
+    {% else %}
+    No points before this point
+    {% endif %}
+    {% if current %}
+    <a href=/scores>Most recent scores</a>
+    {% endif %}
+</div>
+
+{% endblock content %}
