@@ -50,10 +50,14 @@ impl Handler<FetchFavouriteInfo> for DbExecutor {
                         user_id: msg.user_id,
                         country_id: None,
                         choice: i as i16,
-                        created_at: Utc::now().naive_local(), // Doesn't matter too much if this is the right method (as opposed to naive_utc)
-                        updated_at: Utc::now().naive_local(),
                         phase: 0,
                         source: "manual".to_string(),
+
+                        // Doesn't matter too much if naive_local is the right method
+                        // (as opposed to naive_utc), because we don't send it to the DB here,
+                        // we only need it to get the Favourite type to display things
+                        created_at: Utc::now().naive_local(),
+                        updated_at: Utc::now().naive_local(),
                     },
                     None,
                 ));

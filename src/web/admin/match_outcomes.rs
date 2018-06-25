@@ -1,5 +1,6 @@
-use models::{Favourite, Match, MatchOutcome, MatchPrediction, MatchWithAllInfo,
-             MatchWithParticipants, User};
+use models::{
+    Favourite, Match, MatchOutcome, MatchPrediction, MatchWithAllInfo, MatchWithParticipants, User,
+};
 use scores::user_match_points;
 use templates::{Context, TEMPLATE_SERVICE};
 use web::app_state::DbExecutor;
@@ -215,6 +216,7 @@ impl Handler<UpdateMatchOutcomeInfo> for DbExecutor {
                     (
                         MatchWithParticipants {
                             match_id: game.match_id,
+                            stage_id: game.stage_id,
                             home_participant,
                             away_participant,
                             time: game.time,

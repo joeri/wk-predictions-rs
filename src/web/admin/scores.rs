@@ -1,5 +1,7 @@
-use models::{Favourite, Match, MatchOutcome, MatchParticipant, MatchPrediction, MatchWithAllInfo,
-             MatchWithParticipants, User};
+use models::{
+    Favourite, Match, MatchOutcome, MatchParticipant, MatchPrediction, MatchWithAllInfo,
+    MatchWithParticipants, User,
+};
 use scores::user_match_points;
 use templates::{Context, TEMPLATE_SERVICE};
 use web::app_state::DbExecutor;
@@ -58,6 +60,7 @@ impl Handler<RecalculateScores> for DbExecutor {
                             (
                                 MatchWithParticipants {
                                     match_id: game.match_id,
+                                    stage_id: game.stage_id,
                                     home_participant: participants_by_id[&game.home_participant_id]
                                         .clone(),
                                     away_participant: participants_by_id[&game.away_participant_id]
@@ -100,8 +103,6 @@ impl Handler<RecalculateScores> for DbExecutor {
                             .filter(|prediction| prediction.match_id == game.0.match_id)
                             .next()
                             .map(|prediction| prediction.clone());
-                        // TODO filter favourites to only count favourites for the phase this game
-                        // is in
                         match_points.push(user_match_points(
                             &(user.0.clone(), prediction, user.2.clone()),
                             game,

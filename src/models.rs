@@ -132,6 +132,7 @@ pub struct Match {
 
 pub struct MatchWithParticipants {
     pub match_id: i32,
+    pub stage_id: i32,
     pub home_participant: MatchParticipant,
     pub away_participant: MatchParticipant,
     pub time: DateTime<Utc>,

@@ -1,7 +1,17 @@
-use models::{Favourite, MatchOutcome, MatchPrediction, MatchWithParticipants, User,
-             UserMatchPoints};
+use models::{
+    Favourite, MatchOutcome, MatchPrediction, MatchWithParticipants, User, UserMatchPoints,
+};
 
 use std::cmp::max;
+
+fn phase_of(game: &MatchWithParticipants) -> i16 {
+    match game.stage_id {
+        1 => 0,
+        2 | 3 => 1,
+        4 | 5 | 6 => 2,
+        _ => unreachable!(),
+    }
+}
 
 fn favourite_points(
     favourite: &Favourite,
@@ -9,6 +19,9 @@ fn favourite_points(
     outcome: &MatchOutcome,
 ) -> i16 {
     if favourite.updated_at >= game.time.naive_utc() {
+        return 0;
+    }
+    if favourite.phase != phase_of(game) {
         return 0;
     }
 
