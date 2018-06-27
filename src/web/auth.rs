@@ -1,7 +1,8 @@
 use actix::prelude::*;
-use actix_web::{self, dev::AsyncResult, error::ResponseError,
-                middleware::identity::RequestIdentity, AsyncResponder, Form, FromRequest,
-                FutureResponse, HttpRequest, HttpResponse, State};
+use actix_web::{
+    self, dev::AsyncResult, error::ResponseError, middleware::identity::RequestIdentity,
+    AsyncResponder, Form, FromRequest, FutureResponse, HttpRequest, HttpResponse, State,
+};
 use bcrypt::verify;
 use diesel::{self, prelude::*};
 use failure;

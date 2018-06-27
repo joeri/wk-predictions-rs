@@ -3,8 +3,10 @@ use templates::{Context, TEMPLATE_SERVICE};
 use web::app_state::{AppState, DbExecutor};
 
 use actix::prelude::*;
-use actix_web::{middleware::identity::RequestIdentity, AsyncResponder, Either, Error,
-                FutureResponse, HttpRequest, HttpResponse, State};
+use actix_web::{
+    middleware::identity::RequestIdentity, AsyncResponder, Either, Error, FutureResponse,
+    HttpRequest, HttpResponse, State,
+};
 use futures::Future;
 
 use diesel::prelude::*;
