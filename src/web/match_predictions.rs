@@ -1,5 +1,6 @@
-use models::{Location, Match, MatchOutcome, MatchPrediction, MatchWithAllInfo,
-             PredictionWithSource, UpdatedPrediction, User};
+use models::{
+    Location, Match, MatchOutcome, MatchPrediction, MatchWithAllInfo, UpdatedPrediction, User,
+};
 use templates::{Context, TEMPLATE_SERVICE};
 use web::app_state::DbExecutor;
 use web::{app_state::AppState, auth::CurrentUser};
@@ -208,6 +209,8 @@ impl Handler<UpdatePredictionInfo> for DbExecutor {
             away_score: msg.prediction.away_score,
 
             time_of_first_goal: msg.prediction.time_of_first_goal,
+
+            source: "manual".to_string(),
         };
 
         if match_info.time >= Utc::now() {
@@ -354,6 +357,8 @@ impl Handler<BulkUpdatePredictions> for DbExecutor {
                         away_score: prediction.away_score,
 
                         time_of_first_goal: prediction.time_of_first_goal,
+
+                        source: "manual".to_string(),
                     };
 
                     insert_into(match_predictions)
@@ -512,7 +517,7 @@ impl Handler<UpdateVeryLucky> for DbExecutor {
             rng: &mut T,
             user_id: i32,
             match_id: i32,
-        ) -> PredictionWithSource {
+        ) -> UpdatedPrediction {
             let home_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
             let away_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
             let time_of_first_goal = if home_score > 0 || away_score > 0 {
@@ -521,7 +526,7 @@ impl Handler<UpdateVeryLucky> for DbExecutor {
                 0
             };
 
-            PredictionWithSource {
+            UpdatedPrediction {
                 user_id,
                 match_id,
 
@@ -610,7 +615,7 @@ impl Handler<UpdateLucky> for DbExecutor {
             rng: &mut T,
             user_id: i32,
             match_id: i32,
-        ) -> PredictionWithSource {
+        ) -> UpdatedPrediction {
             let home_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
             let away_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
             let time_of_first_goal = if home_score > 0 || away_score > 0 {
@@ -619,7 +624,7 @@ impl Handler<UpdateLucky> for DbExecutor {
                 0
             };
 
-            PredictionWithSource {
+            UpdatedPrediction {
                 user_id,
                 match_id,
 
@@ -655,6 +660,7 @@ impl Handler<UpdateLucky> for DbExecutor {
                     home_score.eq(excluded(home_score)),
                     away_score.eq(excluded(away_score)),
                     time_of_first_goal.eq(excluded(time_of_first_goal)),
+                    source.eq(excluded(source)),
                 ))
                 .execute(&self.connection)?;
         }
