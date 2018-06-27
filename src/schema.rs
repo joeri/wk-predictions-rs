@@ -10,6 +10,7 @@ table! {
         name -> Varchar,
         flag -> Varchar,
         seeding_pot -> Bpchar,
+        qualified_for_knockout -> Bool,
     }
 }
 

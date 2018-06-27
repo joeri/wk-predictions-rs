@@ -9,6 +9,7 @@ use chrono::Utc;
 use diesel::{self, prelude::*};
 use failure;
 use futures::Future;
+use std::{error::Error as StdError, fmt};
 
 struct FavouriteInfo {
     current_selection: Vec<(Favourite, Option<Country>)>,
@@ -17,10 +18,26 @@ struct FavouriteInfo {
 
 struct FetchFavouriteInfo {
     user_id: i32,
+    phase: i16,
 }
 
 impl Message for FetchFavouriteInfo {
     type Result = Result<FavouriteInfo, failure::Error>;
+}
+
+#[derive(Debug)]
+struct UnexpectedError;
+
+impl fmt::Display for UnexpectedError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Unexpected error")
+    }
+}
+
+impl StdError for UnexpectedError {
+    fn description(&self) -> &str {
+        "Unexpected error"
+    }
 }
 
 impl Handler<FetchFavouriteInfo> for DbExecutor {
@@ -30,7 +47,16 @@ impl Handler<FetchFavouriteInfo> for DbExecutor {
         let available_countries = {
             use schema::countries::dsl::*;
 
-            countries.order(name.asc()).load(&self.connection)?
+            if msg.phase == 0 {
+                countries.order(name.asc()).load(&self.connection)?
+            } else if msg.phase == 1 {
+                countries
+                    .filter(qualified_for_knockout.eq(true))
+                    .order(name.asc())
+                    .load(&self.connection)?
+            } else {
+                unreachable!()
+            }
         };
         let mut current_selection = {
             use schema::countries;
@@ -38,19 +64,27 @@ impl Handler<FetchFavouriteInfo> for DbExecutor {
 
             favourites
                 .filter(user_id.eq(msg.user_id))
+                .filter(phase.eq(msg.phase))
                 .order(choice)
                 .left_join(countries::table)
                 .load(&self.connection)?
         };
 
-        if current_selection.len() < 4 {
-            for i in (current_selection.len() + 1)..=4 {
+        let (offset, length) = match msg.phase {
+            0 => (1, 4),
+            1 => (5, 3),
+            2 => (8, 1),
+            _ => unreachable!(),
+        };
+
+        if current_selection.len() == 0 {
+            for i in offset..(offset + length) {
                 current_selection.push((
                     Favourite {
                         user_id: msg.user_id,
                         country_id: None,
                         choice: i as i16,
-                        phase: 0,
+                        phase: msg.phase,
                         source: "manual".to_string(),
 
                         // Doesn't matter too much if naive_local is the right method
@@ -63,11 +97,14 @@ impl Handler<FetchFavouriteInfo> for DbExecutor {
                 ));
             }
         }
-
-        Ok(FavouriteInfo {
-            available_countries,
-            current_selection,
-        })
+        if current_selection.len() != length {
+            Err(UnexpectedError.into())
+        } else {
+            Ok(FavouriteInfo {
+                available_countries,
+                current_selection,
+            })
+        }
     }
 }
 
@@ -96,6 +133,7 @@ pub fn edit(auth: CurrentUser, req: HttpRequest<AppState>) -> impl Responder {
         .db
         .send(FetchFavouriteInfo {
             user_id: auth.current_user.user_id,
+            phase: 1,
         })
         .and_then(move |fav_info| match fav_info {
             Ok(info) => Ok(render_favourite_selection(&auth, &info)),
@@ -112,6 +150,7 @@ pub fn edit(auth: CurrentUser, req: HttpRequest<AppState>) -> impl Responder {
 struct UpdatedFavouriteInfo {
     user_id: i32,
     data: FavouriteSelectionForm,
+    phase: i16,
 }
 
 impl Message for UpdatedFavouriteInfo {
@@ -122,17 +161,12 @@ impl Handler<UpdatedFavouriteInfo> for DbExecutor {
     type Result = Result<(), failure::Error>;
 
     fn handle(&mut self, msg: UpdatedFavouriteInfo, _: &mut Self::Context) -> Self::Result {
-        let data = vec![
-            msg.data.fav_1,
-            msg.data.fav_2,
-            msg.data.fav_3,
-            msg.data.fav_4,
-        ];
+        let data = vec![msg.data.fav_1, msg.data.fav_2, msg.data.fav_3];
 
         self.connection
             .transaction::<_, diesel::result::Error, _>(|| {
                 let mut changes = Vec::new();
-                for (&country_id, choice_idx) in data.iter().zip((1..=4).into_iter()) {
+                for (&country_id, choice_idx) in data.iter().zip((5..=7).into_iter()) {
                     changes.push(UpdatedFavourite {
                         user_id: msg.user_id,
                         country_id: if country_id == 0 {
@@ -140,7 +174,7 @@ impl Handler<UpdatedFavouriteInfo> for DbExecutor {
                         } else {
                             Some(country_id)
                         },
-                        phase: 0,
+                        phase: msg.phase,
                         choice: choice_idx,
                     });
                 }
@@ -175,7 +209,6 @@ pub struct FavouriteSelectionForm {
     fav_1: i32,
     fav_2: i32,
     fav_3: i32,
-    fav_4: i32,
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
@@ -189,6 +222,7 @@ pub fn update(
         .send(UpdatedFavouriteInfo {
             user_id: auth.current_user.user_id,
             data: form.into_inner(),
+            phase: 1,
         })
         .and_then(|update| match update {
             Ok(()) => Ok(HttpResponse::SeeOther().header("Location", "/").finish()),

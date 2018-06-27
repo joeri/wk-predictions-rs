@@ -65,6 +65,7 @@ pub struct Country {
     pub name: String,
     pub flag: String,
     pub seeding_pot: String,
+    pub qualified_for_knockout: bool,
 }
 
 #[derive(Queryable, Identifiable, Debug, Serialize, Deserialize)]
