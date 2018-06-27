@@ -42,12 +42,7 @@ fn import_countries(conn: &PgConnection) -> Result<Vec<Country>, Box<Error>> {
                 countries::flag.eq(record.flag),
                 countries::seeding_pot.eq(record.seeding_pot),
             ))
-            .returning((
-                countries::country_id,
-                countries::name,
-                countries::flag,
-                countries::seeding_pot,
-            ))
+            .returning(countries::all_columns)
             .get_result(conn)?;
         println!("{:?}", inserted);
         result.push(inserted);
