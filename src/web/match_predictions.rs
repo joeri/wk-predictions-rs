@@ -6,8 +6,10 @@ use web::app_state::DbExecutor;
 use web::{app_state::AppState, auth::CurrentUser};
 
 use actix::prelude::*;
-use actix_web::{self, dev::AsyncResult, error::ResponseError, AsyncResponder, Form, FromRequest,
-                FutureResponse, HttpRequest, HttpResponse, Path, Responder};
+use actix_web::{
+    self, dev::AsyncResult, error::ResponseError, AsyncResponder, Form, FromRequest,
+    FutureResponse, HttpRequest, HttpResponse, Path, Responder,
+};
 use chrono::Utc;
 use diesel::{self, prelude::*};
 use failure;
