@@ -153,6 +153,10 @@ pub struct MatchPrediction {
     pub updated_at: NaiveDateTime,
 
     pub source: String,
+
+    pub home_penalties: Option<i32>,
+    pub away_penalties: Option<i32>,
+    pub duration: Option<i32>,
 }
 
 #[derive(Debug, Insertable, AsChangeset)]
@@ -167,6 +171,10 @@ pub struct UpdatedPrediction {
     pub time_of_first_goal: i16,
 
     pub source: String,
+
+    pub home_penalties: Option<i32>,
+    pub away_penalties: Option<i32>,
+    pub duration: Option<i32>,
 }
 
 #[derive(Queryable, Identifiable, Insertable, Debug, Serialize, Deserialize, AsChangeset, Clone)]
@@ -177,6 +185,10 @@ pub struct MatchOutcome {
     pub home_score: i16,
     pub away_score: i16,
     pub time_of_first_goal: i16,
+
+    pub home_penalties: Option<i32>,
+    pub away_penalties: Option<i32>,
+    pub duration: Option<i32>,
 }
 
 // I should consider adding a view according to this data

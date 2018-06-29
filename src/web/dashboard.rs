@@ -106,6 +106,9 @@ fn fetch_previous(
                 match_outcomes::columns::home_score,
                 match_outcomes::columns::away_score,
                 match_outcomes::columns::time_of_first_goal,
+                match_outcomes::columns::home_penalties,
+                match_outcomes::columns::away_penalties,
+                match_outcomes::columns::duration,
             ).nullable(),
             match_predictions::all_columns.nullable(),
         ))

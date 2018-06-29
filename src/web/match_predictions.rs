@@ -92,7 +92,15 @@ impl Handler<FetchPredictionInfo> for DbExecutor {
 
                 match_outcomes
                     .filter(match_id.eq(msg.match_id))
-                    .select((match_id, home_score, away_score, time_of_first_goal))
+                    .select((
+                        match_id,
+                        home_score,
+                        away_score,
+                        time_of_first_goal,
+                        home_penalties,
+                        away_penalties,
+                        duration,
+                    ))
                     .first(&self.connection)
                     .optional()?
             };
@@ -179,6 +187,10 @@ pub struct PredictionForm {
     home_score: i16,
     away_score: i16,
     time_of_first_goal: i16,
+
+    home_penalties: Option<i32>,
+    away_penalties: Option<i32>,
+    duration: Option<i32>,
 }
 
 struct UpdatePredictionInfo {
@@ -213,6 +225,10 @@ impl Handler<UpdatePredictionInfo> for DbExecutor {
             time_of_first_goal: msg.prediction.time_of_first_goal,
 
             source: "manual".to_string(),
+
+            home_penalties: msg.prediction.home_penalties,
+            away_penalties: msg.prediction.away_penalties,
+            duration: msg.prediction.duration,
         };
 
         if match_info.time >= Utc::now() {
@@ -361,6 +377,10 @@ impl Handler<BulkUpdatePredictions> for DbExecutor {
                         time_of_first_goal: prediction.time_of_first_goal,
 
                         source: "manual".to_string(),
+
+                        home_penalties: None,
+                        away_penalties: None,
+                        duration: None,
                     };
 
                     insert_into(match_predictions)
@@ -510,36 +530,55 @@ const GOAL_POSSIBILITIES: [i16; 25] = [
     0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 6, 7,
 ];
 
+fn generate_random_score<T: Rng>(rng: &mut T, user_id: i32, match_id: i32) -> UpdatedPrediction {
+    let home_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
+    let away_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
+    let time_of_first_goal = if home_score > 0 || away_score > 0 {
+        rng.sample(Uniform::from(0..90))
+    } else {
+        0
+    };
+
+    // Dirty hack
+    let (home_penalties, away_penalties, duration) = if match_id <= 48 {
+        (None, None, None)
+    } else {
+        if home_score == away_score {
+            let home = rng.gen_range(0, 10);
+            let away = if home < 5 {
+                5
+            } else if rng.gen_bool(0.5) {
+                home + 1
+            } else {
+                home - 1
+            };
+            (Some(home), Some(away), Some(120))
+        } else {
+            (None, None, Some(if rng.gen_bool(0.5) { 90 } else { 120 }))
+        }
+    };
+
+    UpdatedPrediction {
+        user_id,
+        match_id,
+
+        home_score,
+        away_score,
+        time_of_first_goal,
+
+        source: "lucky".to_string(),
+
+        home_penalties,
+        away_penalties,
+        duration,
+    }
+}
+
 impl Handler<UpdateVeryLucky> for DbExecutor {
     type Result = Result<(), failure::Error>;
 
     fn handle(&mut self, msg: UpdateVeryLucky, _: &mut Self::Context) -> Self::Result {
         // For each match the user didn't predict him/herself and that hasn't happened yet
-        fn generate_random_score<T: Rng>(
-            rng: &mut T,
-            user_id: i32,
-            match_id: i32,
-        ) -> UpdatedPrediction {
-            let home_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
-            let away_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
-            let time_of_first_goal = if home_score > 0 || away_score > 0 {
-                rng.sample(Uniform::from(0..90))
-            } else {
-                0
-            };
-
-            UpdatedPrediction {
-                user_id,
-                match_id,
-
-                home_score,
-                away_score,
-                time_of_first_goal,
-
-                source: "lucky".to_string(),
-            }
-        }
-
         let mut rng = thread_rng();
         let to_be_updated = {
             use schema::match_predictions::dsl::*;
@@ -613,31 +652,6 @@ impl Handler<UpdateLucky> for DbExecutor {
 
     fn handle(&mut self, msg: UpdateLucky, _: &mut Self::Context) -> Self::Result {
         // For each match the user didn't predict him/herself and that hasn't happened yet
-        fn generate_random_score<T: Rng>(
-            rng: &mut T,
-            user_id: i32,
-            match_id: i32,
-        ) -> UpdatedPrediction {
-            let home_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
-            let away_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
-            let time_of_first_goal = if home_score > 0 || away_score > 0 {
-                rng.sample(Uniform::from(0..90))
-            } else {
-                0
-            };
-
-            UpdatedPrediction {
-                user_id,
-                match_id,
-
-                home_score,
-                away_score,
-                time_of_first_goal,
-
-                source: "lucky".to_string(),
-            }
-        }
-
         let mut rng = thread_rng();
         let values = generate_random_score(&mut rng, msg.user_id, msg.match_id);
 
@@ -739,6 +753,9 @@ impl Handler<FetchAllPredictionInfo> for DbExecutor {
                     match_outcomes::columns::home_score,
                     match_outcomes::columns::away_score,
                     match_outcomes::columns::time_of_first_goal,
+                    match_outcomes::columns::home_penalties,
+                    match_outcomes::columns::away_penalties,
+                    match_outcomes::columns::duration,
                 ).nullable(),
                 match_predictions::all_columns.nullable(),
             ))

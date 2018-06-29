@@ -37,7 +37,15 @@ impl Handler<RecalculateScores> for DbExecutor {
                         use schema::match_outcomes::dsl::*;
 
                         match_outcomes
-                            .select((match_id, home_score, away_score, time_of_first_goal))
+                            .select((
+                                match_id,
+                                home_score,
+                                away_score,
+                                time_of_first_goal,
+                                home_penalties,
+                                away_penalties,
+                                duration,
+                            ))
                             .load::<MatchOutcome>(&self.connection)?
                     };
 

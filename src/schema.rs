@@ -69,6 +69,9 @@ table! {
         created_at -> Timestamp,
         updated_at -> Timestamp,
         time_of_first_goal -> Int2,
+        home_penalties -> Nullable<Int4>,
+        away_penalties -> Nullable<Int4>,
+        duration -> Nullable<Int4>,
     }
 }
 
@@ -94,6 +97,9 @@ table! {
         created_at -> Timestamp,
         updated_at -> Timestamp,
         source -> Varchar,
+        home_penalties -> Nullable<Int4>,
+        away_penalties -> Nullable<Int4>,
+        duration -> Nullable<Int4>,
     }
 }
 

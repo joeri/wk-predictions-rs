@@ -36,6 +36,9 @@ impl Handler<IndexMatchOutcomes> for DbExecutor {
                     match_outcomes::columns::home_score,
                     match_outcomes::columns::away_score,
                     match_outcomes::columns::time_of_first_goal,
+                    match_outcomes::columns::home_penalties,
+                    match_outcomes::columns::away_penalties,
+                    match_outcomes::columns::duration,
                 ).nullable(),
             ))
             .order((time.desc(), match_id.asc()))
@@ -108,6 +111,9 @@ impl Handler<FetchMatchOutcomeInfo> for DbExecutor {
                     match_outcomes::columns::home_score,
                     match_outcomes::columns::away_score,
                     match_outcomes::columns::time_of_first_goal,
+                    match_outcomes::columns::home_penalties,
+                    match_outcomes::columns::away_penalties,
+                    match_outcomes::columns::duration,
                 ).nullable(),
             ))
             .first::<(MatchWithAllInfo, Option<MatchOutcome>)>(&self.connection)?)
