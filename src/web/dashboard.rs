@@ -61,6 +61,8 @@ fn fetch_upcoming(
 
     Ok(full_match_infos
         .filter(time.gt(Utc::now()))
+        .filter(home_country_name.is_not_null())
+        .filter(away_country_name.is_not_null())
         .left_join(
             match_predictions::table.on(match_predictions::columns::match_id
                 .eq(match_id)
