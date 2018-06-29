@@ -261,7 +261,7 @@ pub fn perform_registration(
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
-pub fn perform_logout(current_user: CurrentUser, mut req: HttpRequest<AppState>) -> HttpResponse {
+pub fn perform_logout(_current_user: CurrentUser, mut req: HttpRequest<AppState>) -> HttpResponse {
     req.forget();
 
     HttpResponse::TemporaryRedirect()

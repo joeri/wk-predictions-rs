@@ -255,7 +255,7 @@ fn insert_participant(
                     stage_id.eq(1),
                     country_id.eq(teams_by_country_name.get(&team).unwrap().country_id),
                     group_id.eq(country_group_id),
-                    group_drawn_place.eq(drawn_place as i32),
+                    group_drawn_place.eq(i32::from(drawn_place)),
                 ))
                 .returning(all_columns)
                 .get_result(conn)?
@@ -317,10 +317,8 @@ fn import_matches(
                 matches::match_id.eq(record.match_id),
                 matches::stage_id.eq(1),
                 matches::time.eq(time),
-                matches::location_id.eq(locations_by_city_and_stadium
-                    .get(&(record.city, record.stadium))
-                    .unwrap()
-                    .location_id),
+                matches::location_id
+                    .eq(locations_by_city_and_stadium[&(record.city, record.stadium)].location_id),
                 matches::home_participant_id.eq(home_participant.match_participant_id),
                 matches::away_participant_id.eq(away_participant.match_participant_id),
             ))

@@ -1,13 +1,10 @@
-use models::User;
 use templates::{Context, TEMPLATE_SERVICE};
 use web::{
     app_state::{AppState, DbExecutor}, auth::CurrentUser,
 };
 
 use actix::prelude::*;
-use actix_web::{
-    AsyncResponder, FutureResponse, HttpRequest, HttpResponse, Query, Responder, State,
-};
+use actix_web::{AsyncResponder, HttpResponse, Query, Responder, State};
 use futures::Future;
 
 use chrono::{DateTime, NaiveDateTime, Utc};
@@ -77,7 +74,7 @@ impl Handler<FetchLeaderBoard> for DbExecutor {
                 matches
                     .select(sql::<Nullable<Timestamptz>>("max(time) as time"))
                     .inner_join(match_outcomes)
-                    .filter(sql("time < ").bind::<Timestamptz, _>(up_to_chrono))
+                    .filter(time.lt(up_to_chrono))
                     .first(&self.connection)?
             };
 
@@ -98,7 +95,7 @@ impl Handler<FetchLeaderBoard> for DbExecutor {
             ).load(&self.connection)?;
 
             let time = {
-                use diesel::dsl::{max, sql};
+                use diesel::dsl::sql;
                 use schema::match_outcomes::table as match_outcomes;
                 use schema::matches::dsl::*;
 

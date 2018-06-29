@@ -641,7 +641,7 @@ impl Handler<UpdateLucky> for DbExecutor {
         let mut rng = thread_rng();
         let values = generate_random_score(&mut rng, msg.user_id, msg.match_id);
 
-        let match_valid = {
+        let _match_valid = {
             use schema::matches::dsl::*;
 
             matches

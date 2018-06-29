@@ -1,14 +1,11 @@
 use models::{
-    Favourite, Match, MatchOutcome, MatchParticipant, MatchPrediction, MatchWithAllInfo,
-    MatchWithParticipants, User,
+    Favourite, Match, MatchOutcome, MatchParticipant, MatchPrediction, MatchWithParticipants, User,
 };
 use scores::user_match_points;
-use templates::{Context, TEMPLATE_SERVICE};
 use web::app_state::DbExecutor;
 
 use actix::prelude::*;
-use actix_web::{AsyncResponder, Either, Form, HttpResponse, Path, Responder, State};
-use chrono::Utc;
+use actix_web::{AsyncResponder, Either, HttpResponse, Responder, State};
 use diesel::{self, prelude::*};
 use failure;
 use futures::Future;
@@ -23,7 +20,7 @@ impl Message for RecalculateScores {
 impl Handler<RecalculateScores> for DbExecutor {
     type Result = Result<(), failure::Error>;
 
-    fn handle(&mut self, msg: RecalculateScores, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, _msg: RecalculateScores, _ctx: &mut Self::Context) -> Self::Result {
         use diesel::{insert_into, update};
 
         Ok(self.connection
@@ -54,8 +51,7 @@ impl Handler<RecalculateScores> for DbExecutor {
                         .map(|game| {
                             let match_outcome = match_outcomes
                                 .iter()
-                                .filter(|outcome| outcome.match_id == game.match_id)
-                                .next();
+                                .find(|outcome| outcome.match_id == game.match_id);
 
                             (
                                 MatchWithParticipants {
@@ -100,9 +96,8 @@ impl Handler<RecalculateScores> for DbExecutor {
                     for game in &games {
                         let prediction = user.1
                             .iter()
-                            .filter(|prediction| prediction.match_id == game.0.match_id)
-                            .next()
-                            .map(|prediction| prediction.clone());
+                            .find(|prediction| prediction.match_id == game.0.match_id)
+                            .cloned();
                         match_points.push(user_match_points(
                             &(user.0.clone(), prediction, user.2.clone()),
                             game,

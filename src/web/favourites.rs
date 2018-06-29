@@ -77,7 +77,7 @@ impl Handler<FetchFavouriteInfo> for DbExecutor {
             _ => unreachable!(),
         };
 
-        if current_selection.len() == 0 {
+        if current_selection.is_empty() {
             for i in offset..(offset + length) {
                 current_selection.push((
                     Favourite {

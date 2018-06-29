@@ -22,7 +22,7 @@ impl Message for IndexMatchOutcomes {
 impl Handler<IndexMatchOutcomes> for DbExecutor {
     type Result = Result<Vec<(MatchWithAllInfo, Option<MatchOutcome>)>, failure::Error>;
 
-    fn handle(&mut self, msg: IndexMatchOutcomes, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, _msg: IndexMatchOutcomes, _ctx: &mut Self::Context) -> Self::Result {
         use schema::full_match_infos::dsl::*;
         use schema::match_outcomes;
 

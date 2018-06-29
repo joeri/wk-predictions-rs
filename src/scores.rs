@@ -26,20 +26,20 @@ fn favourite_points(
     }
 
     if favourite.country_id == game.home_participant.country_id {
-        if outcome.home_score > outcome.away_score {
-            3 + outcome.home_score
+        outcome.home_score + if outcome.home_score > outcome.away_score {
+            3
         } else if outcome.home_score == outcome.away_score {
-            1 + outcome.home_score
+            1
         } else {
-            0 + outcome.home_score
+            0
         }
     } else if favourite.country_id == game.away_participant.country_id {
-        if outcome.away_score > outcome.home_score {
-            3 + outcome.away_score
+        outcome.away_score + if outcome.away_score > outcome.home_score {
+            3
         } else if outcome.home_score == outcome.away_score {
-            1 + outcome.away_score
+            1
         } else {
-            0 + outcome.away_score
+            0
         }
     } else {
         0
@@ -101,7 +101,7 @@ pub fn user_match_points(
 ) -> UserMatchPoints {
     let mut fav_points = 0;
     for favourite in &user_with_prediction.2 {
-        fav_points += favourite_points(&favourite, &game.0, &game.1) as i32;
+        fav_points += i32::from(favourite_points(&favourite, &game.0, &game.1));
     }
     let (prediction_points, tofg_points) = if let Some(prediction) = &user_with_prediction.1 {
         prediction_and_tofg_points(&prediction, &game.0, &game.1)
