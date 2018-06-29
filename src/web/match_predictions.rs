@@ -17,6 +17,26 @@ use futures::Future;
 use rand::{distributions::Uniform, prelude::*};
 use std::{error::Error as StdError, fmt};
 
+fn insert_predictions(values: &Vec<UpdatedPrediction>, conn: &PgConnection) -> QueryResult<usize> {
+    use diesel::pg::upsert::excluded;
+    use schema::match_predictions::dsl::*;
+
+    diesel::insert_into(match_predictions)
+        .values(values)
+        .on_conflict((match_id, user_id))
+        .do_update()
+        .set((
+            home_score.eq(excluded(home_score)),
+            away_score.eq(excluded(away_score)),
+            time_of_first_goal.eq(excluded(time_of_first_goal)),
+            home_penalties.eq(excluded(home_penalties)),
+            away_penalties.eq(excluded(away_penalties)),
+            duration.eq(excluded(duration)),
+            source.eq(excluded(source)),
+        ))
+        .execute(conn)
+}
+
 struct FetchPredictionInfo {
     user_id: i32,
     match_id: i32,
@@ -556,9 +576,11 @@ fn generate_random_score<T: Rng>(rng: &mut T, user_id: i32, match_id: i32) -> Up
 
     // Dirty hack
     let (home_penalties, away_penalties, duration) = if match_id <= 48 {
+        println!("Predicting group match");
         (None, None, None)
     } else {
         if home_score == away_score {
+            println!("Predicting tied knock-out match");
             let home = rng.gen_range(0, 10);
             let away = if home < 5 {
                 5
@@ -569,6 +591,7 @@ fn generate_random_score<T: Rng>(rng: &mut T, user_id: i32, match_id: i32) -> Up
             };
             (Some(home), Some(away), Some(120))
         } else {
+            println!("Predicting non-tied knock-out match");
             (None, None, Some(if rng.gen_bool(0.5) { 90 } else { 120 }))
         }
     };
@@ -615,21 +638,7 @@ impl Handler<UpdateVeryLucky> for DbExecutor {
             .map(|(m,)| generate_random_score(&mut rng, msg.user_id, *m))
             .collect::<Vec<_>>();
 
-        {
-            use diesel::pg::upsert::excluded;
-            use schema::match_predictions::dsl::*;
-
-            diesel::insert_into(match_predictions)
-                .values(&values)
-                .on_conflict((match_id, user_id))
-                .do_update()
-                .set((
-                    home_score.eq(excluded(home_score)),
-                    away_score.eq(excluded(away_score)),
-                    time_of_first_goal.eq(excluded(time_of_first_goal)),
-                ))
-                .execute(&self.connection)?;
-        }
+        insert_predictions(&values, &self.connection)?;
 
         Ok(())
     }
@@ -668,7 +677,7 @@ impl Handler<UpdateLucky> for DbExecutor {
     fn handle(&mut self, msg: UpdateLucky, _: &mut Self::Context) -> Self::Result {
         // For each match the user didn't predict him/herself and that hasn't happened yet
         let mut rng = thread_rng();
-        let values = generate_random_score(&mut rng, msg.user_id, msg.match_id);
+        let values = vec![generate_random_score(&mut rng, msg.user_id, msg.match_id)];
 
         let _match_valid = {
             use schema::matches::dsl::*;
@@ -679,22 +688,7 @@ impl Handler<UpdateLucky> for DbExecutor {
                 .first::<(i32,)>(&self.connection)?
         };
 
-        {
-            use diesel::pg::upsert::excluded;
-            use schema::match_predictions::dsl::*;
-
-            diesel::insert_into(match_predictions)
-                .values(&values)
-                .on_conflict((match_id, user_id))
-                .do_update()
-                .set((
-                    home_score.eq(excluded(home_score)),
-                    away_score.eq(excluded(away_score)),
-                    time_of_first_goal.eq(excluded(time_of_first_goal)),
-                    source.eq(excluded(source)),
-                ))
-                .execute(&self.connection)?;
-        }
+        insert_predictions(&values, &self.connection)?;
 
         Ok(())
     }
