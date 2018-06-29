@@ -188,9 +188,9 @@ pub struct PredictionForm {
     away_score: i16,
     time_of_first_goal: i16,
 
-    home_penalties: Option<i32>,
-    away_penalties: Option<i32>,
-    duration: Option<i32>,
+    home_penalties: String,
+    away_penalties: String,
+    duration: String,
 }
 
 struct UpdatePredictionInfo {
@@ -215,6 +215,21 @@ impl Handler<UpdatePredictionInfo> for DbExecutor {
                 .first::<Match>(&self.connection)?
         };
 
+        let (home_penalties, away_penalties) =
+            if match_info.stage_id > 1 && msg.prediction.home_penalties == "" {
+                (None, None)
+            } else {
+                (
+                    Some(msg.prediction.home_penalties.parse()?),
+                    Some(msg.prediction.away_penalties.parse()?),
+                )
+            };
+        let duration = if match_info.stage_id > 1 {
+            Some(msg.prediction.duration.parse()?)
+        } else {
+            None
+        };
+
         let prediction = UpdatedPrediction {
             user_id: msg.user_id,
             match_id: msg.match_id,
@@ -226,9 +241,9 @@ impl Handler<UpdatePredictionInfo> for DbExecutor {
 
             source: "manual".to_string(),
 
-            home_penalties: msg.prediction.home_penalties,
-            away_penalties: msg.prediction.away_penalties,
-            duration: msg.prediction.duration,
+            home_penalties,
+            away_penalties,
+            duration,
         };
 
         if match_info.time >= Utc::now() {

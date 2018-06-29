@@ -160,6 +160,7 @@ pub struct MatchPrediction {
 }
 
 #[derive(Debug, Insertable, AsChangeset)]
+#[changeset_options(treat_none_as_null = "true")]
 #[table_name = "match_predictions"]
 pub struct UpdatedPrediction {
     pub match_id: i32,
