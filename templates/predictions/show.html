@@ -2,13 +2,22 @@
 {% block title %}Edit prediction {% endblock title %}
 
 {% block content %}
-<div id=prediction>
+<div id=prediction class='{% if match.match_id > 48 %}knock-out{% endif %}'>
     <h1>{{ match.home_country_name }}<span class=country-flag>{{ match.home_country_flag }}</span> vs. {{ match.away_country_name }}<span class=country-flag>{{ match.away_country_flag }}</span> </h1>
     <div>Match took place in {{location.stadium}}, {{location.city}} at <span class=time data-time="{{ match.time | date(format="%s") }}">{{ match.time | date(format="%a %B %d (%H:%M %Z)")  }}</span></div>
     <h2>Prediction</h2>
     {% if prediction %}
         <div>Predicted Score{% if prediction.source != "manual" %}<span class="prediction-source {{prediction.source}}"></span>{% endif %}: {{ match.home_country_name }} {{ prediction.home_score }} - {{ prediction.away_score }} {{ match.away_country_name }}.</div>
         <div>Time of first goal: {{ prediction.time_of_first_goal }}</div>
+        {% if match.home_previous_match_result %}
+            {% if prediction.home_penalties %}
+            <div class=penalties>
+                Outcome of penalties (in case of a tie): {{ prediction.home_penalties }} - {{ prediction.away_penalties }}
+            </div>
+            {% else %}{% if match.match_id > 48 %}
+            <div class=duration>Duration of match: {{ prediction.duration }}</div>
+            {% endif %}{% endif %}
+        {% endif %}
     {% else %}
         <div>You didn't make a prediction for this match</div>
     {% endif %}
@@ -16,13 +25,61 @@
     {% if outcome %}
         <div>Score {{ match.home_country_name }} {{ outcome.home_score }} - {{ outcome.away_score }} {{ match.away_country_name }}.</div>
         <div>Time of first goal {{ outcome.time_of_first_goal }}</div>
+        {% if match.home_previous_match_result %}
+            {% if prediction.home_penalties %}
+            <div class=penalties>
+                Outcome of penalties: {{ outcome.home_penalties }} - {{ outcome.away_penalties }}
+            </div>
+            {% else %}{% if match.match_id > 48 %}
+            <div class=duration>Duration of match: {{ outcome.duration }}</div>
+            {% endif %}{% endif %}
+        {% endif %}
     {% else %}
         <div>Outcome has not yet been entered in the system.</div>
     {% endif %}
-    <h3>Other Peoples Prediction</h3>
+    <h2>Points</h2>
+    {% if points %}
+        <div>Prediction: {{ points.prediction }}</div>
+        <div>Time Of First Goal: {{ points.time_of_first_goal }}</div>
+        <div>Favourites: {{ points.favourites }}</div>
+    {% endif %}
+    <h2>Other Peoples Prediction</h2>
+    <div class=other-predictions>
+        <div class=row>
+            <div>User</div>
+            <div>Goals (H)</div>
+            <div>Goals (A)</div>
+            <div>ToFG</div>
+            {% if match.match_id > 48 %}
+            <div>Duration</div>
+            <div>Pen (H)</div>
+            <div>Pen (A)</div>
+            {% endif %}
+            <div class=points-prediction>Points Prediction</div>
+            <div class=points-tofg>Points ToFG</div>
+            <div class=points-fav>Points Favourites</div>
+        </div>
     {% for other in other_predictions %}
-    <div>{{ other.1.display_name }} predicted {{ other.0.home_score }} - {{ other.0.away_score }} (time of first goal {{ other.0.time_of_first_goal }})</div>
+        <div class='row'>
+            <div>{{ other.0.display_name }}</div>
+            {% if other.1 %}
+            <div>{{ other.1.home_score }}</div>
+            <div>{{ other.1.away_score }}</div>
+            <div>{{ other.1.time_of_first_goal }}</div>
+            {% if match.match_id > 48 %}
+            <div>{{ other.1.duration }}</div>
+            <div>{{ other.1.home_penalties }}</div>
+            <div>{{ other.1.away_penalties }}</div>
+            {% endif %}
+            {% endif %}
+            {% if other.2 %}
+            <div class=points-prediction>{{ other.2.prediction }}</div>
+            <div class=points-tofg>{{ other.2.time_of_first_goal }}</div>
+            <div class=points-fav>{{ other.2.favourites }}</div>
+            {% endif %}
+        </div>
     {% endfor %}
+    </div>
 </div>
 {% endblock content %}
 

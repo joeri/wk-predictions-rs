@@ -119,6 +119,38 @@ body {
   background: aliceblue;
 }
 
+#prediction .row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+#prediction.knock-out .row {
+  grid-template-columns: repeat(10, 1fr);
+}
+#prediction .row .points-prediction {
+  grid-column: 5;
+}
+#prediction .row .points-tofg {
+  grid-column: 6;
+}
+#prediction .row .points-fav {
+  grid-column: 7;
+}
+#prediction.knock-out .row .points-prediction {
+  grid-column: 8;
+}
+#prediction.knock-out .row .points-tofg {
+  grid-column: 9;
+}
+#prediction.knock-out .row .points-fav {
+  grid-column: 10;
+}
+
+#prediction .row:nth-child(even) {
+  background: aliceblue;
+}
+
 .country-flag, .prediction-source {
   font-family: apple color emoji,segoe ui emoji,notocoloremoji,segoe ui symbol,android emoji,emojisymbols,emojione mozilla;
 }

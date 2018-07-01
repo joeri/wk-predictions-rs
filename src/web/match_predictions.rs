@@ -1,5 +1,6 @@
 use models::{
     Location, Match, MatchOutcome, MatchPrediction, MatchWithAllInfo, UpdatedPrediction, User,
+    UserMatchPoints,
 };
 use templates::{Context, TEMPLATE_SERVICE};
 use web::app_state::DbExecutor;
@@ -47,8 +48,9 @@ struct PredictionInfo {
     match_with_info: MatchWithAllInfo,
     location: Location,
     prediction: Option<MatchPrediction>,
+    points: Option<UserMatchPoints>,
     outcome: Option<MatchOutcome>,
-    other_predictions: Vec<(MatchPrediction, User)>,
+    other_predictions: Vec<(User, Option<MatchPrediction>, Option<UserMatchPoints>)>,
 }
 
 impl PredictionInfo {
@@ -83,6 +85,16 @@ impl Handler<FetchPredictionInfo> for DbExecutor {
                 .optional()?
         };
 
+        let points = {
+            use schema::user_match_points::dsl::*;
+
+            user_match_points
+                .filter(user_id.eq(msg.user_id))
+                .filter(match_id.eq(match_info.match_id))
+                .first(&self.connection)
+                .optional()?
+        };
+
         let location = {
             use schema::locations::dsl::*;
 
@@ -93,15 +105,40 @@ impl Handler<FetchPredictionInfo> for DbExecutor {
 
         let (outcome, other_predictions) = if match_info.time < Utc::now() {
             let others = {
-                use schema::match_predictions::dsl::*;
                 use schema::users;
+                let (match_predictions_join, prediction_present) = {
+                    use schema::match_predictions::dsl::*;
 
-                let query = match_predictions
-                    .filter(user_id.ne(msg.user_id))
-                    .filter(match_id.eq(match_info.match_id))
-                    .inner_join(users::table.on(users::columns::user_id.eq(user_id)));
+                    (
+                        match_predictions.on(user_id
+                            .eq(users::user_id)
+                            .and(match_id.eq(match_info.match_id))),
+                        user_id.is_not_null(),
+                    )
+                };
 
-                /* println!(
+                let (match_points_join, points_present) = {
+                    use schema::user_match_points::dsl::*;
+
+                    (
+                        user_match_points.on(user_id
+                            .eq(users::user_id)
+                            .and(match_id.eq(match_info.match_id))),
+                        user_id.is_not_null(),
+                    )
+                };
+
+                let query = {
+                    use schema::users::dsl::*;
+                    users
+                        .filter(user_id.ne(msg.user_id))
+                        .left_join(match_predictions_join)
+                        .left_join(match_points_join)
+                        .filter(prediction_present.or(points_present))
+                };
+
+                /*
+                println!(
                     "{}",
                     diesel::debug_query::<diesel::pg::Pg, _>(&query).to_string()
                 ); */
@@ -132,6 +169,7 @@ impl Handler<FetchPredictionInfo> for DbExecutor {
         Ok(PredictionInfo {
             match_with_info: match_info,
             prediction,
+            points,
             location,
             outcome,
             other_predictions,

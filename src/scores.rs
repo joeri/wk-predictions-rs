@@ -55,7 +55,7 @@ fn prediction_and_tofg_points(
         return (0, 0);
     }
 
-    fn winner(a: i16, b: i16) -> i8 {
+    fn compare<N: Ord>(a: N, b: N) -> i8 {
         if a > b {
             1
         } else if a == b {
@@ -65,8 +65,8 @@ fn prediction_and_tofg_points(
         }
     }
 
-    let predicted_winner = winner(prediction.home_score, prediction.away_score);
-    let actual_winner = winner(outcome.home_score, outcome.away_score);
+    let predicted_winner = compare(prediction.home_score, prediction.away_score);
+    let actual_winner = compare(outcome.home_score, outcome.away_score);
 
     let mut result = 0;
     if predicted_winner == actual_winner {
@@ -79,10 +79,60 @@ fn prediction_and_tofg_points(
         result += 1;
     }
     if result == 4 {
-        // Outcome equals prediction completely
+        // Outcome equals prediction completely so far
         result += 3;
     }
 
+    // Technically this should check knock-out or group round
+    if phase_of(game) > 1 {
+        if actual_winner == 0 {
+            // Check penalties
+            if predicted_winner == 0 {
+                let predicted_home_win = prediction.home_penalties > prediction.away_penalties;
+                let actual_home_win = outcome.home_penalties > outcome.away_penalties;
+                let mut penalty_result = 0;
+
+                if predicted_home_win == actual_home_win {
+                    penalty_result += 1;
+
+                    if prediction.home_penalties == outcome.home_penalties {
+                        penalty_result += 1;
+                    }
+                    if prediction.away_penalties == outcome.away_penalties {
+                        penalty_result += 1;
+                    }
+
+                    // Bonus point if the outcome of the penalties is fully correct
+                    if penalty_result == 3 {
+                        penalty_result += 1;
+                    }
+
+                    result += penalty_result;
+                }
+            } else {
+                // Bonus point if your favourite team manages to eke out a point during the penalties
+                let (home_penalties, away_penalties) = (
+                    outcome.home_penalties.unwrap(),
+                    outcome.away_penalties.unwrap(),
+                );
+                let penalty_winner = compare(home_penalties, away_penalties);
+
+                if penalty_winner == predicted_winner {
+                    result += 1;
+                }
+            }
+        } else {
+            if predicted_winner != 0 {
+                // Check the predicted duration: 90 minutes or 120 minutes
+                if prediction.duration == outcome.duration {
+                    result += 1
+                }
+            }
+        }
+    }
+
+    // For the time of first goal we will only look at the right time in the regular time + extra
+    // time, penalties don't matter
     let points_for_time_of_goal = if predicted_winner == actual_winner {
         max(
             0,

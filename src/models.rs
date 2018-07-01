@@ -261,7 +261,7 @@ pub struct UpdatedFavourite {
     pub phase: i16,
 }
 
-#[derive(Queryable, Insertable, AsChangeset)]
+#[derive(Serialize, Deserialize, Debug, Queryable, Insertable, AsChangeset)]
 #[table_name = "user_match_points"]
 pub struct UserMatchPoints {
     pub user_id: i32,
