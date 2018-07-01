@@ -203,7 +203,7 @@ impl MatchOutcome {
                 (self.home_penalties.unwrap(), self.away_penalties.unwrap());
             if home_penalties > away_penalties {
                 1
-            } else if away_penalties < away_penalties {
+            } else if home_penalties < away_penalties {
                 -1
             } else {
                 unreachable!()
