@@ -84,7 +84,7 @@ fn prediction_and_tofg_points(
     }
 
     // Technically this should check knock-out or group round
-    if phase_of(game) > 1 {
+    if phase_of(game) >= 1 {
         if actual_winner == 0 {
             // Check penalties
             if predicted_winner == 0 {

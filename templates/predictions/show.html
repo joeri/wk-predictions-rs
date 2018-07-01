@@ -9,7 +9,7 @@
     {% if prediction %}
         <div>Predicted Score{% if prediction.source != "manual" %}<span class="prediction-source {{prediction.source}}"></span>{% endif %}: {{ match.home_country_name }} {{ prediction.home_score }} - {{ prediction.away_score }} {{ match.away_country_name }}.</div>
         <div>Time of first goal: {{ prediction.time_of_first_goal }}</div>
-        {% if match.home_previous_match_result %}
+        {% if match.match_id > 48 %}
             {% if prediction.home_penalties %}
             <div class=penalties>
                 Outcome of penalties (in case of a tie): {{ prediction.home_penalties }} - {{ prediction.away_penalties }}
@@ -25,7 +25,7 @@
     {% if outcome %}
         <div>Score {{ match.home_country_name }} {{ outcome.home_score }} - {{ outcome.away_score }} {{ match.away_country_name }}.</div>
         <div>Time of first goal {{ outcome.time_of_first_goal }}</div>
-        {% if match.home_previous_match_result %}
+        {% if match.match_id > 48 %}
             {% if prediction.home_penalties %}
             <div class=penalties>
                 Outcome of penalties: {{ outcome.home_penalties }} - {{ outcome.away_penalties }}
