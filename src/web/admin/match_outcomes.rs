@@ -280,34 +280,114 @@ impl Handler<UpdateMatchOutcomeInfo> for DbExecutor {
                         .execute(&self.connection)?;
                 }
 
+                {
+                    if game.0.stage_id > 0 {
+                        use schema::match_participants::dsl::*;
+                        let (winning_country_id, losing_country_id) = match game.1.winner() {
+                            1 => (
+                                game.0.home_participant.country_id,
+                                game.0.away_participant.country_id,
+                            ),
+                            -1 => (
+                                game.0.away_participant.country_id,
+                                game.0.home_participant.country_id,
+                            ),
+                            _ => unreachable!(),
+                        };
+
+                        update(match_participants)
+                            .filter(previous_match_id.eq(game.0.match_id))
+                            .filter(result.eq("winner"))
+                            .set(country_id.eq(winning_country_id))
+                            .execute(&self.connection)?;
+                        update(match_participants)
+                            .filter(previous_match_id.eq(game.0.match_id))
+                            .filter(result.eq("loser"))
+                            .set(country_id.eq(losing_country_id))
+                            .execute(&self.connection)?;
+                    }
+                }
                 Ok(())
             })?)
     }
 }
 
+#[derive(Deserialize)]
+pub struct MatchOutcomeWithStrings {
+    pub match_id: i32,
+
+    pub home_score: i16,
+    pub away_score: i16,
+    pub time_of_first_goal: i16,
+
+    pub home_penalties: String,
+    pub away_penalties: String,
+    pub duration: String,
+}
+
+impl MatchOutcomeWithStrings {
+    fn to_match_outcome(&self) -> Result<MatchOutcome, failure::Error> {
+        let (home_penalties, away_penalties) = if self.match_id > 48 && self.home_penalties == "" {
+            (None, None)
+        } else {
+            (
+                Some(self.home_penalties.parse()?),
+                Some(self.away_penalties.parse()?),
+            )
+        };
+        let duration = if self.match_id > 48 {
+            Some(self.duration.parse()?)
+        } else {
+            None
+        };
+
+        Ok(MatchOutcome {
+            match_id: self.match_id,
+
+            home_score: self.home_score,
+            away_score: self.away_score,
+            time_of_first_goal: self.time_of_first_goal,
+
+            home_penalties,
+            away_penalties,
+            duration,
+        })
+    }
+}
+
 pub fn update(
-    (auth, outcome, state): (CurrentUser, Form<MatchOutcome>, State<AppState>),
+    (auth, outcome, state): (CurrentUser, Form<MatchOutcomeWithStrings>, State<AppState>),
 ) -> impl Responder {
     if auth.current_user.user_id == 1 {
-        Either::A(
-            state
-                .db
-                .send(UpdateMatchOutcomeInfo {
-                    outcome: outcome.clone(),
-                })
-                .and_then(move |data| match data {
-                    Ok(()) => Ok(HttpResponse::SeeOther()
-                        .header("Location", "/admin/matches")
-                        .finish()),
-                    Err(error) => {
-                        println!("{:?}", error);
-                        Ok(HttpResponse::SeeOther()
-                            .header("Location", format!("/admin/matches/{}", outcome.match_id))
-                            .finish())
-                    }
-                })
-                .responder(),
-        )
+        match outcome.into_inner().to_match_outcome() {
+            Ok(outcome) => Either::A(
+                state
+                    .db
+                    .send(UpdateMatchOutcomeInfo {
+                        outcome: outcome.clone(),
+                    })
+                    .and_then(move |data| match data {
+                        Ok(()) => Ok(HttpResponse::SeeOther()
+                            .header("Location", "/admin/matches")
+                            .finish()),
+                        Err(error) => {
+                            println!("{:?}", error);
+                            Ok(HttpResponse::SeeOther()
+                                .header("Location", format!("/admin/matches/{}", outcome.match_id))
+                                .finish())
+                        }
+                    })
+                    .responder(),
+            ),
+            Err(error) => {
+                println!("{:?}", error);
+                Either::B(
+                    HttpResponse::Forbidden()
+                        .content_type("text/html")
+                        .body("You do not have permission to view this page"),
+                )
+            }
+        }
     } else {
         Either::B(
             HttpResponse::Forbidden()

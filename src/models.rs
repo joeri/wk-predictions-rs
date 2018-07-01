@@ -192,6 +192,28 @@ pub struct MatchOutcome {
     pub duration: Option<i32>,
 }
 
+impl MatchOutcome {
+    pub fn winner(&self) -> i32 {
+        if self.home_score > self.away_score {
+            1
+        } else if self.home_score < self.away_score {
+            -1
+        } else if self.home_penalties.is_some() {
+            let (home_penalties, away_penalties) =
+                (self.home_penalties.unwrap(), self.away_penalties.unwrap());
+            if home_penalties > away_penalties {
+                1
+            } else if away_penalties < away_penalties {
+                -1
+            } else {
+                unreachable!()
+            }
+        } else {
+            0
+        }
+    }
+}
+
 // I should consider adding a view according to this data
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, QueryableByName)]
 #[table_name = "full_match_infos"]

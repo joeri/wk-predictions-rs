@@ -15,6 +15,19 @@
             <label>Time of first goal <input type=text name=time_of_first_goal {% if outcome %}value='{{ outcome.time_of_first_goal }}'{% endif %} /></label>
         </div>
 
+        {% if match.home_previous_match_result %}
+        <div class=duration>
+            <label>Duration of match: <select name=duration>
+                    <option value=90 {% if prediction and prediction.duration == 90 %}selected{%endif%}>90</option>
+                    <option value=120 {% if prediction and prediction.duration == 120 %}selected{%endif%}>120</option>
+                </select></label>
+        </div>
+        <div class=penalties>
+            Outcome of penalties (in case of a tie)
+            <label>{{ match.home_country_name }} <input type=text name=home_penalties {% if prediction %}value='{{ prediction.home_penalties }}'{% endif %}></label> -
+            <label>{{ match.away_country_name }} <input type=text name=away_penalties {% if prediction %}value='{{ prediction.away_penalties }}'{% endif %}></label>
+        </div>
+        {% endif %}
         <input type=submit value="Update">
     </form>
 </div>
