@@ -15,7 +15,7 @@ use diesel::{self, prelude::*};
 use failure;
 use futures::Future;
 use rand::{distributions::Uniform, prelude::*};
-use std::{error::Error as StdError, fmt};
+use std::{cmp, error::Error as StdError, fmt};
 
 fn insert_predictions(values: &Vec<UpdatedPrediction>, conn: &PgConnection) -> QueryResult<usize> {
     use diesel::pg::upsert::excluded;
@@ -569,7 +569,11 @@ fn generate_random_score<T: Rng>(rng: &mut T, user_id: i32, match_id: i32) -> Up
     let home_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
     let away_score = rng.choose(&GOAL_POSSIBILITIES).unwrap_or(&0).to_owned();
     let time_of_first_goal = if home_score > 0 || away_score > 0 {
-        rng.sample(Uniform::from(0..90))
+        if match_id > 48 {
+            rng.sample(Uniform::from(1..121))
+        } else {
+            rng.sample(Uniform::from(1..91))
+        }
     } else {
         0
     };
@@ -582,17 +586,26 @@ fn generate_random_score<T: Rng>(rng: &mut T, user_id: i32, match_id: i32) -> Up
         if home_score == away_score {
             println!("Predicting tied knock-out match");
             let home = rng.gen_range(0, 10);
-            let away = if home < 5 {
-                5
-            } else if rng.gen_bool(0.5) {
-                home + 1
+            let away = if home > 5 {
+                if rng.gen_bool(0.5) {
+                    home + 1
+                } else {
+                    home - 1
+                }
             } else {
-                home - 1
+                rng.gen_range(0, cmp::max(home + 2, 5))
             };
             (Some(home), Some(away), Some(120))
         } else {
             println!("Predicting non-tied knock-out match");
-            (None, None, Some(if rng.gen_bool(0.5) { 90 } else { 120 }))
+            let duration = if time_of_first_goal <= 90 && home_score * away_score == 0 {
+                90
+            } else if rng.gen_bool(0.5) {
+                90
+            } else {
+                120
+            };
+            (None, None, Some(duration))
         }
     };
 
