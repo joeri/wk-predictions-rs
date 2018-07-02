@@ -203,6 +203,7 @@ pub fn edit(
                         TEMPLATE_SERVICE.render("predictions/edit.html", &context)
                     } else {
                         context.add("outcome", &info.outcome);
+                        context.add("points", &info.points);
                         context.add("other_predictions", &info.other_predictions);
                         TEMPLATE_SERVICE.render("predictions/show.html", &context)
                     };
