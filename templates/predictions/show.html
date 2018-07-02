@@ -26,7 +26,7 @@
         <div>Score {{ match.home_country_name }} {{ outcome.home_score }} - {{ outcome.away_score }} {{ match.away_country_name }}.</div>
         <div>Time of first goal {{ outcome.time_of_first_goal }}</div>
         {% if match.match_id > 48 %}
-            {% if prediction.home_penalties %}
+            {% if outcome.home_penalties %}
             <div class=penalties>
                 Outcome of penalties: {{ outcome.home_penalties }} - {{ outcome.away_penalties }}
             </div>
