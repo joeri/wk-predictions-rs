@@ -124,7 +124,7 @@ impl Handler<FetchPredictionInfo> for DbExecutor {
                         user_match_points.on(user_id
                             .eq(users::user_id)
                             .and(match_id.eq(match_info.match_id))),
-                        user_id.is_not_null(),
+                        total.lt(0),
                     )
                 };
 
