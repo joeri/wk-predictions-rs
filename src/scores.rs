@@ -92,6 +92,9 @@ fn prediction_and_tofg_points(
                 let actual_home_win = outcome.home_penalties > outcome.away_penalties;
                 let mut penalty_result = 0;
 
+                // Bonus point for predicting the way the game would end: in penalties
+                result += 1;
+
                 if predicted_home_win == actual_home_win {
                     penalty_result += 1;
 
@@ -124,7 +127,11 @@ fn prediction_and_tofg_points(
         } else {
             if predicted_winner != 0 {
                 // Check the predicted duration: 90 minutes or 120 minutes
-                if prediction.duration == outcome.duration {
+                //
+                // Because of a bug some people unknowingly didn't enter a duration for some
+                // matches, lets' count that as a 90 minutes outcome (as long as they didn't
+                // predict penalties of course)
+                if prediction.duration.or(Some(90)) == outcome.duration {
                     result += 1
                 }
             }
