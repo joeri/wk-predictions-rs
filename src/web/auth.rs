@@ -107,7 +107,7 @@ pub fn login() -> HttpResponse {
     }
 }
 
-pub struct FetchCurrentUser {
+struct FetchCurrentUser {
     user_id: i32,
 }
 

@@ -124,16 +124,14 @@ fn prediction_and_tofg_points(
                     result += 1;
                 }
             }
-        } else {
-            if predicted_winner != 0 {
-                // Check the predicted duration: 90 minutes or 120 minutes
-                //
-                // Because of a bug some people unknowingly didn't enter a duration for some
-                // matches, lets' count that as a 90 minutes outcome (as long as they didn't
-                // predict penalties of course)
-                if prediction.duration.or(Some(90)) == outcome.duration {
-                    result += 1
-                }
+        } else if predicted_winner != 0 {
+            // Check the predicted duration: 90 minutes or 120 minutes
+            //
+            // Because of a bug some people unknowingly didn't enter a duration for some
+            // matches, lets' count that as a 90 minutes outcome (as long as they didn't
+            // predict penalties of course)
+            if prediction.duration.or(Some(90)) == outcome.duration {
+                result += 1
             }
         }
     }
