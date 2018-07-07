@@ -37,6 +37,18 @@
 
     <div id="favourites">
         <h4>Favourites</h4>
+        Favourite during the semi-finals, the final and the third place playoff
+        <ul>
+        {% for favourite in favourites %}
+        {% if favourite.0.phase == 2 %}
+        <li>{% if favourite.1 %}{{ favourite.1.name }}<span class="country-flag">{{ favourite.1.flag}}</span> (Group {{ favourite.2.name }})
+            {% else %}You haven&apos;t selected a favourite country yet
+            {% endif %}</li>
+        {% endif %}
+        {% endfor %}
+        </ul>
+        <a href=/favourites>Update</a>
+
         Favourites during the first two knock-out rounds
         <ul>
         {% for favourite in favourites %}
@@ -47,7 +59,6 @@
         {% endif %}
         {% endfor %}
         </ul>
-        <a href=/favourites>Update</a>
 
         <div>Favourites during the group round (you can choose new favourites once the group phase is over).</div>
         <ul>

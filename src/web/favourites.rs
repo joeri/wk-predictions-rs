@@ -55,7 +55,14 @@ impl Handler<FetchFavouriteInfo> for DbExecutor {
                     .order(name.asc())
                     .load(&self.connection)?
             } else {
-                unreachable!()
+                use schema::{countries, match_participants};
+
+                countries
+                    .left_join(match_participants::table)
+                    .filter(match_participants::columns::stage_id.eq(4))
+                    .order(name.asc())
+                    .select(countries::all_columns)
+                    .load(&self.connection)?
             }
         };
         let mut current_selection = {
@@ -133,7 +140,7 @@ pub fn edit(auth: CurrentUser, req: HttpRequest<AppState>) -> impl Responder {
         .db
         .send(FetchFavouriteInfo {
             user_id: auth.current_user.user_id,
-            phase: 1,
+            phase: 2,
         })
         .and_then(move |fav_info| match fav_info {
             Ok(info) => Ok(render_favourite_selection(&auth, &info)),
@@ -161,12 +168,12 @@ impl Handler<UpdatedFavouriteInfo> for DbExecutor {
     type Result = Result<(), failure::Error>;
 
     fn handle(&mut self, msg: UpdatedFavouriteInfo, _: &mut Self::Context) -> Self::Result {
-        let data = vec![msg.data.fav_1, msg.data.fav_2, msg.data.fav_3];
+        let data = vec![msg.data.fav_1];
 
         self.connection
             .transaction::<_, diesel::result::Error, _>(|| {
                 let mut changes = Vec::new();
-                for (&country_id, choice_idx) in data.iter().zip((5..=7).into_iter()) {
+                for (&country_id, choice_idx) in data.iter().zip((8..=8).into_iter()) {
                     changes.push(UpdatedFavourite {
                         user_id: msg.user_id,
                         country_id: if country_id == 0 {
@@ -207,8 +214,6 @@ pub struct FavouriteSelectionForm {
     // write my own extractor based on that crate, but at the moment I'm trying
     // to get something working
     fav_1: i32,
-    fav_2: i32,
-    fav_3: i32,
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
@@ -222,7 +227,7 @@ pub fn update(
         .send(UpdatedFavouriteInfo {
             user_id: auth.current_user.user_id,
             data: form.into_inner(),
-            phase: 1,
+            phase: 2,
         })
         .and_then(|update| match update {
             Ok(()) => Ok(HttpResponse::SeeOther().header("Location", "/").finish()),
