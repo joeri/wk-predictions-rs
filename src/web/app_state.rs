@@ -12,7 +12,7 @@ impl Actor for DbExecutor {
 
 /// This is state where we will store *DbExecutor* address.
 pub struct AppState {
-    pub db: Addr<Syn, DbExecutor>,
+    pub db: Addr<DbExecutor>,
 }
 
 pub fn establish_connection(database_url: &str) -> DbExecutor {

@@ -161,9 +161,7 @@ impl Handler<LoginForm> for DbExecutor {
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn perform_login(
-    form: Form<LoginForm>,
-    state: State<AppState>,
-    mut req: HttpRequest<AppState>,
+    (form, state, req): (Form<LoginForm>, State<AppState>, HttpRequest<AppState>),
 ) -> FutureResponse<HttpResponse> {
     let inner_form = form.into_inner();
     state
@@ -234,8 +232,7 @@ impl Handler<RegistrationForm> for DbExecutor {
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn perform_registration(
-    form: Form<RegistrationForm>,
-    state: State<AppState>,
+    (form, state): (Form<RegistrationForm>, State<AppState>),
 ) -> FutureResponse<HttpResponse> {
     use diesel::result::{DatabaseErrorKind, Error::DatabaseError};
 
@@ -261,7 +258,7 @@ pub fn perform_registration(
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
-pub fn perform_logout(_current_user: CurrentUser, mut req: HttpRequest<AppState>) -> HttpResponse {
+pub fn perform_logout((_current_user, req): (CurrentUser, HttpRequest<AppState>)) -> HttpResponse {
     req.forget();
 
     HttpResponse::TemporaryRedirect()

@@ -184,8 +184,7 @@ impl Handler<FetchDataForDashboard> for DbExecutor {
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn index(
-    request: HttpRequest<AppState>,
-    state: State<AppState>,
+    (request, state): (HttpRequest<AppState>, State<AppState>),
 ) -> Either<FutureResponse<HttpResponse>, HttpResponse> {
     match request.identity() {
         Some(current_user_id) => Either::A(

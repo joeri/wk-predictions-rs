@@ -49,35 +49,42 @@ fn main() {
                     .name("auth-cookie")
                     .secure(false),
             ))
-            .handler("/assets", actix_web::fs::StaticFiles::new("assets"))
+            .handler(
+                "/assets",
+                actix_web::fs::StaticFiles::new("assets").unwrap(),
+            )
             .resource("/login", |r| {
                 r.name("login");
                 r.get().f(|_req| auth::login());
-                r.post().with3(auth::perform_login).0.limit(4096);
+                r.post().with_config(auth::perform_login, |cfg| {
+                    cfg.0.limit(4096);
+                });
             })
             .resource("/logout", |r| {
-                r.get().with2(auth::perform_logout);
+                r.get().with(auth::perform_logout);
             })
             .resource("/register", |r| {
                 r.get().f(|_req| auth::register());
-                r.post().with2(auth::perform_registration).0.limit(4096);
+                r.post().with_config(auth::perform_registration, |cfg| {
+                    cfg.0.limit(4096);
+                })
             })
-            .resource("/", |r| r.get().with2(dashboard::index))
-            .resource("/index.html", |r| r.get().with2(dashboard::index))
+            .resource("/", |r| r.get().with(dashboard::index))
+            .resource("/index.html", |r| r.get().with(dashboard::index))
             .resource("/match/{id}/prediction", |r| {
-                r.get().with3(match_predictions::edit);
-                r.post().with3(match_predictions::update);
+                r.get().with(match_predictions::edit);
+                r.post().with(match_predictions::update);
             })
             .resource("/match/{id}/prediction/lucky", |r| {
-                r.post().with2(match_predictions::lucky);
+                r.post().with(match_predictions::lucky);
             })
             .resource("/favourites", |r| {
-                r.get().with2(favourites::edit);
-                r.post().with3(favourites::update);
+                r.get().with(favourites::edit);
+                r.post().with(favourites::update);
             })
             .resource("/predictions", |r| {
-                r.get().with2(match_predictions::bulk_edit);
-                r.post().with3(match_predictions::bulk_update);
+                r.get().with(match_predictions::bulk_edit);
+                r.post().with(match_predictions::bulk_update);
             })
             .resource("/matches", |r| {
                 r.get().with(match_predictions::index); // Perhaps not the right module to place this in
@@ -86,7 +93,7 @@ fn main() {
                 r.get().with(scores::index);
             })
             .resource("/predictions/lucky", |r| {
-                r.post().with2(match_predictions::very_lucky);
+                r.post().with(match_predictions::very_lucky);
             })
             .resource("/rules", |r| {
                 r.get().f(|_req| rules::show());

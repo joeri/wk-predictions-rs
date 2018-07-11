@@ -179,9 +179,7 @@ impl Handler<FetchPredictionInfo> for DbExecutor {
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn edit(
-    auth: CurrentUser,
-    path: Path<(i32,)>,
-    req: HttpRequest<AppState>,
+    (auth, path, req): (CurrentUser, Path<(i32,)>, HttpRequest<AppState>),
 ) -> FutureResponse<HttpResponse> {
     req.state()
         .db
@@ -324,11 +322,13 @@ impl Handler<UpdatePredictionInfo> for DbExecutor {
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn update(
-    auth: CurrentUser,
-    path_and_form: (Path<(i32,)>, Form<PredictionForm>),
-    req: HttpRequest<AppState>,
+    (auth, path, form, req): (
+        CurrentUser,
+        Path<(i32,)>,
+        Form<PredictionForm>,
+        HttpRequest<AppState>,
+    ),
 ) -> FutureResponse<HttpResponse> {
-    let (path, form) = path_and_form;
     req.state()
         .db
         .send(UpdatePredictionInfo {
@@ -379,7 +379,7 @@ impl Handler<FetchBulkPredictionInfo> for DbExecutor {
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
-pub fn bulk_edit(auth: CurrentUser, req: HttpRequest<AppState>) -> impl Responder {
+pub fn bulk_edit((auth, req): (CurrentUser, HttpRequest<AppState>)) -> impl Responder {
     req.state()
         .db
         .send(FetchBulkPredictionInfo {
@@ -570,9 +570,7 @@ impl FromRequest<AppState> for Vec<MatchPredictionItem> {
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn bulk_update(
-    auth: CurrentUser,
-    form: Vec<MatchPredictionItem>,
-    req: HttpRequest<AppState>,
+    (auth, form, req): (CurrentUser, Vec<MatchPredictionItem>, HttpRequest<AppState>),
 ) -> FutureResponse<HttpResponse> {
     req.state()
         .db
@@ -697,7 +695,7 @@ impl Handler<UpdateVeryLucky> for DbExecutor {
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
-pub fn very_lucky(auth: CurrentUser, req: HttpRequest<AppState>) -> impl Responder {
+pub fn very_lucky((auth, req): (CurrentUser, HttpRequest<AppState>)) -> impl Responder {
     req.state()
         .db
         .send(UpdateVeryLucky {
@@ -748,8 +746,7 @@ impl Handler<UpdateLucky> for DbExecutor {
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn lucky(
-    (auth, path): (CurrentUser, Path<(i32,)>),
-    req: HttpRequest<AppState>,
+    (auth, path, req): (CurrentUser, Path<(i32,)>, HttpRequest<AppState>),
 ) -> impl Responder {
     req.state()
         .db
