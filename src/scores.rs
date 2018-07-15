@@ -25,7 +25,27 @@ fn favourite_points(
         return 0;
     }
 
-    if favourite.country_id == game.home_participant.country_id {
+    let championship_points = if game.stage_id == 5 {
+        if favourite.country_id == game.home_participant.country_id {
+            if outcome.winner() == 1 {
+                3
+            } else {
+                0
+            }
+        } else if favourite.country_id == game.home_participant.country_id {
+            if outcome.winner() == -1 {
+                3
+            } else {
+                0
+            }
+        } else {
+            0
+        }
+    } else {
+        0
+    };
+
+    championship_points + if favourite.country_id == game.home_participant.country_id {
         outcome.home_score + if outcome.home_score > outcome.away_score {
             3
         } else if outcome.home_score == outcome.away_score {
